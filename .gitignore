@@ -1,0 +1,30 @@
+.classpath
+.project
+
+bin/
+lib/
+build/
+doc/
+dist/
+reports/
+
+.settings/
+
+# Package Files #
+*.jar
+*.war
+*.ear
+
+# Gradle
+gradlew
+gradlew.bat
+gradle/
+.gradle/
+
+build.sh
+build.gradle
+settings.gradle
+
+# virtual machine crash logs, see http://www.java.com/en/download/help/error_hotspot.xml
+hs_err_pid*
+/target/
