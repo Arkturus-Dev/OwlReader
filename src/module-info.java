@@ -1,5 +1,7 @@
 module dev.arkturus.owlreader {
 	exports dev.arkturus.owl;
+	exports dev.arkturus.owlreader;
 
-	requires dev.arkturus.nullanalysis;
+	requires transitive dev.arkturus.nullanalysis;
+	requires java.base;
 }
