@@ -1,0 +1,21 @@
+# ==============================================================================
+# CatCompiler Project Configuration (cat.meow)
+# ==============================================================================
+
+[project]
+name = OwlReader
+version = 1.0.0
+
+[output]
+classes = classes
+jars = .
+
+[compile]
+compliance = 21
+module_path = repo/dev/arkturus/null-analysis/1.0.0/*.jar
+
+[package]
+jar = owlreader-1.0.0.jar
+
+[dependencies.dev.arkturus]
+null-analysis = 1.0.0
