@@ -1,0 +1,38 @@
+# ==============================================================================
+# PomPomeranian Configuration File (pom.pom)
+# ==============================================================================
+
+[project]
+name = OwlReader
+default_workflow = install
+threads = 1C
+offline = false
+
+[env]
+# java_home = /path/to/jdk
+# maven_home = /path/to/maven
+
+[profiles]
+# active = dev,fast
+
+[properties]
+skipTests = false
+
+# ==============================================================================
+# Custom Workflows
+# ==============================================================================
+
+[workflow.fast-install]
+description = Fast install to local repository skipping tests and javadocs
+goals = clean, install
+flags = -DskipTests=true, -Dmaven.javadoc.skip=true
+
+[workflow.ci]
+description = Continuous integration build and verify
+goals = clean, test, verify
+flags = -B, -V
+
+[workflow.release]
+description = Build source jar, verify, and install package
+goals = clean, verify, source:jar-no-fork, install
+flags = -B
