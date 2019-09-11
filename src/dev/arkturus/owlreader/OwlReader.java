@@ -5,7 +5,29 @@ import java.nio.charset.Charset;
 import java.nio.charset.IllegalCharsetNameException;
 import java.nio.charset.UnsupportedCharsetException;
 
+import dev.arkturus.owl.Endian;
+
 public interface OwlReader extends Readable {
+
+	/**
+	 * Get the default endianness.
+	 *
+	 * @return the default ednianness.
+	 */
+	@Override
+	public Endian getEndian();
+
+	/**
+	 * Set the endianness.
+	 *
+	 * @param encoding a String that translates into a {@link Charset} Encoding.
+	 * @see {@link #readShort()}
+	 * @see {@link #readInt()}
+	 * @see {@link #readLong()}
+	 * @see {@link #readFloat()}
+	 * @see {@link #readDouble()}
+	 */
+	public void setEndian(Endian endian);
 
 	/**
 	 * Get the default encoding.

@@ -6,6 +6,8 @@ import java.io.InputStream;
 import java.nio.charset.Charset;
 import java.util.Arrays;
 
+import dev.arkturus.owl.Endian;
+
 public class InputStreamOwlReader extends BaseOwlReader {
 
 	private final Object	readLock	= new Object();
@@ -20,6 +22,11 @@ public class InputStreamOwlReader extends BaseOwlReader {
 	 */
 	public InputStreamOwlReader(InputStream in) {
 		this.in = in;
+	}
+
+	public InputStreamOwlReader(InputStream in, Endian endian) {
+		this(in);
+		setEndian(endian);
 	}
 
 	private void fullRead(byte[] buffer, int count) throws IOException {
@@ -52,7 +59,7 @@ public class InputStreamOwlReader extends BaseOwlReader {
 	public short readShort() throws IOException {
 		synchronized (readLock) {
 			fullRead(buffer, 2);
-			return (short) (((buffer[0] & 0xFF) << 8) + (buffer[1] & 0xFF));
+			return getEndian().readShort(buffer, 0);
 		}
 	}
 
@@ -60,8 +67,7 @@ public class InputStreamOwlReader extends BaseOwlReader {
 	public int readInt() throws IOException {
 		synchronized (readLock) {
 			fullRead(buffer, 4);
-			return ((buffer[0] & 0xFF) << 24) + ((buffer[1] & 0xFF) << 16) + ((buffer[2] & 0xFF) << 8)
-					+ (buffer[3] & 0xFF);
+			return getEndian().readInt(buffer, 0);
 		}
 	}
 
@@ -69,10 +75,7 @@ public class InputStreamOwlReader extends BaseOwlReader {
 	public long readLong() throws IOException {
 		synchronized (readLock) {
 			fullRead(buffer, 8);
-			return (((long) (buffer[0] & 0xFF)) << 56) + (((long) (buffer[1] & 0xFF)) << 48)
-					+ (((long) (buffer[2] & 0xFF)) << 40) + (((long) (buffer[3] & 0xFF)) << 32)
-					+ ((buffer[4] & 0xFF) << 24) + ((buffer[5] & 0xFF) << 16) + ((buffer[6] & 0xFF) << 8)
-					+ (buffer[7] & 0xFF);
+			return getEndian().readLong(buffer, 0);
 		}
 	}
 
