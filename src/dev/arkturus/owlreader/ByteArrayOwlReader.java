@@ -4,6 +4,8 @@ import java.io.EOFException;
 import java.io.IOException;
 import java.nio.charset.Charset;
 
+import dev.arkturus.owl.Endian;
+
 public class ByteArrayOwlReader extends BaseOwlReader {
 
 	protected final Object readLock = new Object();
@@ -16,6 +18,11 @@ public class ByteArrayOwlReader extends BaseOwlReader {
 	 */
 	public ByteArrayOwlReader(byte[] in) {
 		this.in = in;
+	}
+
+	public ByteArrayOwlReader(byte[] in, Endian endian) {
+		this(in);
+		setEndian(endian);
 	}
 
 	@Override
@@ -33,7 +40,9 @@ public class ByteArrayOwlReader extends BaseOwlReader {
 	public short readShort() throws IOException {
 		synchronized (readLock) {
 			try {
-				return (short) (((in[position++] & 0xFF) << 8) + (in[position++] & 0xFF));
+				short value = getEndian().readShort(in, position);
+				position += 2;
+				return value;
 			} catch (ArrayIndexOutOfBoundsException e) {
 				throw new EOFException(e.getMessage());
 			}
@@ -44,8 +53,9 @@ public class ByteArrayOwlReader extends BaseOwlReader {
 	public int readInt() throws IOException {
 		synchronized (readLock) {
 			try {
-				return ((in[position++] & 0xFF) << 24) + ((in[position++] & 0xFF) << 16)
-						+ ((in[position++] & 0xFF) << 8) + (in[position++] & 0xFF);
+				int value = getEndian().readInt(in, position);
+				position += 4;
+				return value;
 			} catch (ArrayIndexOutOfBoundsException e) {
 				throw new EOFException(e.getMessage());
 			}
@@ -56,10 +66,9 @@ public class ByteArrayOwlReader extends BaseOwlReader {
 	public long readLong() throws IOException {
 		synchronized (readLock) {
 			try {
-				return (((long) (in[position++] & 0xFF)) << 56) + (((long) (in[position++] & 0xFF)) << 48)
-						+ (((long) (in[position++] & 0xFF)) << 40) + (((long) (in[position++] & 0xFF)) << 32)
-						+ ((in[position++] & 0xFF) << 24) + ((in[position++] & 0xFF) << 16)
-						+ ((in[position++] & 0xFF) << 8) + (in[position++] & 0xFF);
+				long value = getEndian().readLong(in, position);
+				position += 8;
+				return value;
 			} catch (ArrayIndexOutOfBoundsException e) {
 				throw new EOFException(e.getMessage());
 			}
