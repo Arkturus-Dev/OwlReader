@@ -23,6 +23,7 @@ public interface OwlReader extends Closeable, Readable {
 	public Endian getEndian();
 
 	/**
+	 * /**
 	 * Set the endianness.
 	 *
 	 * @param encoding a String that translates into a {@link Charset} Encoding.
@@ -35,14 +36,65 @@ public interface OwlReader extends Closeable, Readable {
 	public void setEndian(Endian endian);
 
 	/**
-	 * Get the default encoding.
+	 * Reads a float from the input.
+	 * 
+	 * @return a float.
+	 * @throws IOException
+	 */
+	public default float readFloat() throws IOException {
+		return Float.intBitsToFloat(readInt());
+	}
+
+	/**
+	 * Reads a double from the input.
+	 * 
+	 * @return a double.
+	 * @throws IOException
+	 */
+	public default double readDouble() throws IOException {
+		return Double.longBitsToDouble(readLong());
+	}
+
+	/**
+	 * Reads an unsigned byte from the input. Promotes type to avoid overflow.
+	 * 
+	 * @return a short with the value of the unsigned byte.
+	 * @throws IOException
+	 * @see {@link #readSUByte()} for overflow safe reads.
+	 */
+	public default short readUByte() throws IOException {
+		return (short) Byte.toUnsignedInt(readByte());
+	}
+
+	/**
+	 * Reads an unsigned byte from the input. Throws exceptions on overflow.
+	 * 
+	 * @return an unsigned byte.
+	 * @throws UnsafeUnsignedException if the value would trigger an overflow.
+	 * @throws IOException
+	 * @see {@link #readByte()} for overflow unsafe reads.
+	 */
+	public default byte readSUByte() throws IOException {
+		byte b = readByte();
+		if (b < 0)
+			throw new dev.arkturus.owl.UnsafeUnsignedException(byte.class);
+		return b;
+	}
+
+	/**
+	 * Reads an unsigned short from the input. Promotes type to avoid overflow.
+	 * 
+	 * @return an int with the value of the unsigned short.
+	 * @throws IOException
 	 *
+	 * 
 	 * @return the default encoding.
 	 */
 	public Charset getDefaultEncoding();
 
 	/**
-	 * Set the default encoding. This encoding is used by default on read String methods that do not specify an
+	 * Set the default encoding. This encoding is used by default on read String
+	 * methods that do not specify an
 	 * encoding.
 	 *
 	 * @param encoding a String that translates into a {@link Charset} Encoding.
@@ -60,7 +112,8 @@ public interface OwlReader extends Closeable, Readable {
 	}
 
 	/**
-	 * Set the default encoding. This encoding is used by default on read String methods that do not specify an
+	 * Set the default encoding. This encoding is used by default on read String
+	 * methods that do not specify an
 	 * encoding.
 	 *
 	 * @param encoding {@link Charset} Encoding of the String.
@@ -104,7 +157,8 @@ public interface OwlReader extends Closeable, Readable {
 	}
 
 	/**
-	 * Reads a String with specified length in bytes from the input using the default encoding.
+	 * Reads a String with specified length in bytes from the input using the
+	 * default encoding.
 	 *
 	 * @param bytes length of expected String in bytes
 	 * @return a String
@@ -151,7 +205,8 @@ public interface OwlReader extends Closeable, Readable {
 	public String readNullString() throws IOException;
 
 	/**
-	 * Reads a Pascal String from the input. The string is expected to have a length prefix of 1 byte.
+	 * Reads a Pascal String from the input. The string is expected to have a length
+	 * prefix of 1 byte.
 	 *
 	 * @param encoding a String that translates into a {@link Charset} Encoding.
 	 * @return a String
@@ -166,7 +221,8 @@ public interface OwlReader extends Closeable, Readable {
 	}
 
 	/**
-	 * Reads a Pascal String from the input. The string is expected to have a length prefix of 1 byte.
+	 * Reads a Pascal String from the input. The string is expected to have a length
+	 * prefix of 1 byte.
 	 *
 	 * @param encoding {@link Charset} Encoding of the String.
 	 * @return a String
@@ -180,7 +236,8 @@ public interface OwlReader extends Closeable, Readable {
 	}
 
 	/**
-	 * Reads a Pascal String from the input using the default encoding. The string is expected to have a length prefix
+	 * Reads a Pascal String from the input using the default encoding. The string
+	 * is expected to have a length prefix
 	 * of 1 byte.
 	 *
 	 * @return a String
@@ -191,7 +248,8 @@ public interface OwlReader extends Closeable, Readable {
 	public String readPascalByte() throws IOException;
 
 	/**
-	 * Reads a Pascal String from the input. The string is expected to have a length prefix of 2 bytes.
+	 * Reads a Pascal String from the input. The string is expected to have a length
+	 * prefix of 2 bytes.
 	 *
 	 * @param encoding a String that translates into a {@link Charset} Encoding.
 	 * @return a String
@@ -206,7 +264,8 @@ public interface OwlReader extends Closeable, Readable {
 	}
 
 	/**
-	 * Reads a Pascal String from the input. The string is expected to have a length prefix of 2 bytes.
+	 * Reads a Pascal String from the input. The string is expected to have a length
+	 * prefix of 2 bytes.
 	 *
 	 * @param encoding {@link Charset} Encoding of the String.
 	 * @return a String
@@ -220,7 +279,8 @@ public interface OwlReader extends Closeable, Readable {
 	}
 
 	/**
-	 * Reads a Pascal String from the input using the default encoding. The string is expected to have a length prefix
+	 * Reads a Pascal String from the input using the default encoding. The string
+	 * is expected to have a length prefix
 	 * of 2 bytes.
 	 *
 	 * @return a String
@@ -231,7 +291,8 @@ public interface OwlReader extends Closeable, Readable {
 	public String readPascalShort() throws IOException;
 
 	/**
-	 * Reads a Pascal String from the input. The string is expected to have a length prefix of 4 bytes.
+	 * Reads a Pascal String from the input. The string is expected to have a length
+	 * prefix of 4 bytes.
 	 *
 	 * @param encoding a String that translates into a {@link Charset} Encoding.
 	 * @return a String
@@ -246,7 +307,8 @@ public interface OwlReader extends Closeable, Readable {
 	}
 
 	/**
-	 * Reads a Pascal String from the input. The string is expected to have a length prefix of 4 bytes.
+	 * Reads a Pascal String from the input. The string is expected to have a length
+	 * prefix of 4 bytes.
 	 *
 	 * @param encoding {@link Charset} Encoding of the String.
 	 * @return a String
@@ -260,7 +322,8 @@ public interface OwlReader extends Closeable, Readable {
 	}
 
 	/**
-	 * Reads a Pascal String from the input using the default encoding. The string is expected to have a length prefix
+	 * Reads a Pascal String from the input using the default encoding. The string
+	 * is expected to have a length prefix
 	 * of 4 bytes.
 	 *
 	 * @return a String
@@ -297,7 +360,8 @@ public interface OwlReader extends Closeable, Readable {
 	public String readLine(Charset encoding) throws IOException;
 
 	/**
-	 * Reads bytes from the input using the default encoding until a newline character or EOF.
+	 * Reads bytes from the input using the default encoding until a newline
+	 * character or EOF.
 	 *
 	 * @return the line read.
 	 * @throws IOException
@@ -385,6 +449,7 @@ public interface OwlReader extends Closeable, Readable {
 
 	/**
 	 * Reads a float from the input and compares against a value.
+	 * Reads a float from the input and compares against a value.
 	 *
 	 * @param f value to compare against.
 	 * @return true if values are the same.
@@ -407,7 +472,8 @@ public interface OwlReader extends Closeable, Readable {
 	}
 
 	/**
-	 * Reads a bytes from the input and compares against a value. The amount of bytes read is the same as the length of
+	 * Reads a bytes from the input and compares against a value. The amount of
+	 * bytes read is the same as the length of
 	 * the provided array.
 	 *
 	 * @param data values to compare against.
@@ -447,10 +513,12 @@ public interface OwlReader extends Closeable, Readable {
 	public int position();
 
 	/**
-	 * Creates a OwlReader that may be used to read <code>length</code> bytes, starting from {@link #position()}. If
+	 * Creates a OwlReader that may be used to read <code>length</code> bytes,
+	 * starting from {@link #position()}. If
 	 * more bytes are read, OwlReader will throw an {@link EOFException}. <br>
 	 * <br>
-	 * The produced reader should be read and closed before continuing to read from the original reader. Otherwise
+	 * The produced reader should be read and closed before continuing to read from
+	 * the original reader. Otherwise
 	 * undefined behavior may occur.
 	 *
 	 * @param length number of bytes the reader should be able to read.
