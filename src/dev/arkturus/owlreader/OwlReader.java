@@ -3,10 +3,13 @@ package dev.arkturus.owlreader;
 import java.io.Closeable;
 import java.io.EOFException;
 import java.io.IOException;
+import java.io.InputStream;
 import java.nio.charset.Charset;
 import java.nio.charset.IllegalCharsetNameException;
 import java.nio.charset.UnsupportedCharsetException;
+import java.util.Objects;
 
+import dev.arkturus.nullanalysis.annotations.Nullable;
 import dev.arkturus.owl.Endian;
 
 public interface OwlReader extends Closeable, Readable {
@@ -455,6 +458,40 @@ public interface OwlReader extends Closeable, Readable {
 	 */
 	public default OwlReader frame(int length) {
 		throw new UnsupportedOperationException();
+	}
+
+	public default InputStream toInputStream() {
+		return new InputStream() {
+
+			@Override
+			public int read() throws IOException {
+				if (!OwlReader.this.hasData())
+					return -1;
+				return OwlReader.this.readByte();
+			}
+
+			@Override
+			public int read(byte @Nullable [] b) throws IOException {
+				Objects.requireNonNull(b);
+				return OwlReader.this.read(b);
+			}
+
+			@Override
+			public int read(byte @Nullable [] b, int off, int len) throws IOException {
+				Objects.requireNonNull(b);
+				int read = 0;
+				while (OwlReader.this.hasData())
+					b[read++] = OwlReader.this.readByte();
+				return read;
+			}
+
+			@Override
+			public long skip(long n) throws IOException {
+				OwlReader.this.skipBytes(n);
+				return n;
+			}
+
+		};
 	}
 
 }
