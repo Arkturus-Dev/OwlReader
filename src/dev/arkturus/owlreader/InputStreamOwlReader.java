@@ -50,6 +50,22 @@ public class InputStreamOwlReader extends BaseOwlReader {
 	}
 
 	@Override
+	public int readToBuffer(byte[] buffer, int offset, int count) throws IOException {
+		int read = 0;
+		int i = 0;
+		while (read != count) {
+			i = in.read(buffer, read + offset, count - read);
+			if (i == -1)
+				break;
+			read += i;
+		}
+		if (read == 0)
+			return -1;
+		position += read;
+		return read;
+	}
+
+	@Override
 	public byte readByte() throws IOException {
 		synchronized (readLock) {
 			buffer = fullRead(buffer, 1);
@@ -206,6 +222,15 @@ public class InputStreamOwlReader extends BaseOwlReader {
 
 		public FramedInputStreamOwlReader(int length) {
 			this.length = length;
+		}
+
+		@Override
+		public int readToBuffer(byte[] buffer, int offset, int count) throws IOException {
+			int read = InputStreamOwlReader.this.readToBuffer(buffer, offset, count);
+			if (read == -1)
+				return -1;
+			advance(read);
+			return read;
 		}
 
 		@Override

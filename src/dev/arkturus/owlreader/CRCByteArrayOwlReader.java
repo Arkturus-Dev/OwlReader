@@ -25,6 +25,11 @@ public class CRCByteArrayOwlReader extends BaseOwlReader implements CRCReader {
 	}
 
 	@Override
+	public int readToBuffer(byte[] buffer, int offset, int count) throws IOException {
+		return reader.readToBuffer(buffer, offset, count);
+	}
+
+	@Override
 	public byte readByte() throws IOException {
 		synchronized (reader.readLock) {
 			byte b = reader.readByte();

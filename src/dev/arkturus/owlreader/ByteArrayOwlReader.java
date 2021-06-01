@@ -26,6 +26,16 @@ public class ByteArrayOwlReader extends BaseOwlReader {
 	}
 
 	@Override
+	public int readToBuffer(byte[] buffer, int offset, int count) throws IOException {
+		if (!hasData())
+			throw new EOFException();
+		count = Math.max(count, in.length - position);
+		System.arraycopy(in, position, buffer, offset, count);
+		position += count;
+		return count;
+	}
+
+	@Override
 	public byte readByte() throws IOException {
 		synchronized (readLock) {
 			try {

@@ -141,7 +141,7 @@ public class Buffer implements ReadableBuffer, WritableBuffer {
 		return readIndex;
 	}
 
-	public void clear(){
+	public void clear() {
 		readIndex = 0;
 		writeIndex = 0;
 		line = 1;
@@ -306,6 +306,11 @@ public class Buffer implements ReadableBuffer, WritableBuffer {
 	private class BufferReader extends BaseOwlReader {
 
 		@Override
+		public int readToBuffer(byte[] buffer, int offset, int count) {
+			return Buffer.this.read(buffer, offset, count);
+		}
+
+		@Override
 		public Endian getEndian() {
 			return endian;
 		}
@@ -460,7 +465,7 @@ public class Buffer implements ReadableBuffer, WritableBuffer {
 	}
 
 	@Override
-	public Buffer write(Iterable<@Nullable ?> iterable, String delim) {
+	public <T> Buffer write(Iterable<@Nullable T> iterable, String delim) {
 		WritableBuffer.super.write(iterable, delim);
 		return this;
 	}

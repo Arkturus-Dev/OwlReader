@@ -14,6 +14,12 @@ import dev.arkturus.owl.Endian;
 
 public interface OwlReader extends Closeable, Readable {
 
+	public int readToBuffer(byte[] buffer, int offset, int count) throws IOException;
+
+	public default int readToBuffer(byte[] buffer) throws IOException {
+		return readToBuffer(buffer, 0, buffer.length);
+	}
+
 	/**
 	 * Get the default endianness.
 	 *
