@@ -3,10 +3,13 @@ package dev.arkturus.owlreader;
 import java.io.Closeable;
 import java.io.EOFException;
 import java.io.IOException;
+import java.io.InputStream;
 import java.nio.charset.Charset;
 import java.nio.charset.IllegalCharsetNameException;
 import java.nio.charset.UnsupportedCharsetException;
+import java.util.Objects;
 
+import dev.arkturus.nullanalysis.annotations.Nullable;
 import dev.arkturus.owl.Endian;
 
 public interface OwlReader extends Closeable, Readable {
@@ -413,7 +416,7 @@ public interface OwlReader extends Closeable, Readable {
 	 */
 	public default boolean checkBytes(byte[] data) throws IOException {
 		byte[] buffer = new byte[data.length];
-		if (read(data) != buffer.length)
+		if (read(buffer) != buffer.length)
 			return false;
 		for (int i = 0; i < data.length; i++)
 			if (data[i] != buffer[i])
@@ -455,6 +458,46 @@ public interface OwlReader extends Closeable, Readable {
 	 */
 	public default OwlReader frame(int length) {
 		throw new UnsupportedOperationException();
+	}
+
+	public default InputStream toInputStream() {
+		return new InputStream() {
+
+			@Override
+			public int read() throws IOException {
+				if (!OwlReader.this.hasData())
+					return -1;
+				return OwlReader.this.readByte() & 0xFF;
+			}
+
+			@Override
+			public int read(@SuppressWarnings("null") byte @Nullable [] b) throws IOException {
+				Objects.requireNonNull(b);
+				return read(b, 0, b.length);
+			}
+
+			@Override
+			public int read(@SuppressWarnings("null") byte @Nullable [] b, int off, int len) throws IOException {
+				Objects.requireNonNull(b);
+				Objects.checkFromIndexSize(off, len, b.length);
+				if (len == 0)
+					return 0;
+				if (!OwlReader.this.hasData())
+					return -1;
+				int read = 0;
+				while (read < len && OwlReader.this.hasData()) {
+					b[off + read++] = OwlReader.this.readByte();
+				}
+				return read;
+			}
+
+			@Override
+			public long skip(long n) throws IOException {
+				OwlReader.this.skipBytes(n);
+				return n;
+			}
+
+		};
 	}
 
 }
