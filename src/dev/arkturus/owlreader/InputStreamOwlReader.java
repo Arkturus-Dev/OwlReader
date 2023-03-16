@@ -182,4 +182,9 @@ public class InputStreamOwlReader extends BaseOwlReader {
 		return position;
 	}
 
+	@Override
+	public void close() throws IOException {
+		in.close();
+	}
+
 }
