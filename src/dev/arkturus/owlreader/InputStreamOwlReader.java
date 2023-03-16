@@ -5,6 +5,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.Charset;
 import java.util.Arrays;
+import java.util.Objects;
 
 import dev.arkturus.owl.Endian;
 
@@ -90,19 +91,19 @@ public class InputStreamOwlReader extends BaseOwlReader {
 
 	@Override
 	public int read(byte[] buffer, int off, int len) throws IOException {
-		synchronized (readLock) {		//ONO
-			ensureBuffer(len);
-			int read = 0;
-			int i = 0;
+		Objects.checkFromIndexSize(off, len, buffer.length);
+		int read = 0;
+		int i = 0;
+		synchronized (readLock) {
 			while (read < len) {
 				i = in.read(buffer, read, len - read);
 				if (i == -1)
 					break;
 				read += i;
 			}
-			position += read;
-			return read;
 		}
+		position += read;
+		return read;
 	}
 
 	@Override
