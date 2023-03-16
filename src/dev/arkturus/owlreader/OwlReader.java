@@ -1,6 +1,7 @@
 package dev.arkturus.owlreader;
 
 import java.io.Closeable;
+import java.io.EOFException;
 import java.io.IOException;
 import java.nio.charset.Charset;
 import java.nio.charset.IllegalCharsetNameException;
@@ -441,5 +442,19 @@ public interface OwlReader extends Closeable, Readable {
 	 * @throws IOException
 	 */
 	public int position();
+
+	/**
+	 * Creates a OwlReader that may be used to read <code>length</code> bytes, starting from {@link #position()}. If
+	 * more bytes are read, OwlReader will throw an {@link EOFException}. <br>
+	 * <br>
+	 * The produced reader should be read and closed before continuing to read from the original reader. Otherwise
+	 * undefined behavior may occur.
+	 *
+	 * @param length number of bytes the reader should be able to read.
+	 * @return an OwlReader scoped to read <code>length</code> bytes of data.
+	 */
+	public default OwlReader frame(int length) {
+		throw new UnsupportedOperationException();
+	}
 
 }
