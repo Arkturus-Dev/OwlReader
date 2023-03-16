@@ -1,5 +1,6 @@
 package dev.arkturus.owlreader;
 
+import java.io.Closeable;
 import java.io.IOException;
 import java.nio.charset.Charset;
 import java.nio.charset.IllegalCharsetNameException;
@@ -7,7 +8,7 @@ import java.nio.charset.UnsupportedCharsetException;
 
 import dev.arkturus.owl.Endian;
 
-public interface OwlReader extends Readable {
+public interface OwlReader extends Closeable, Readable {
 
 	/**
 	 * Get the default endianness.
