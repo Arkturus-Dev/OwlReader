@@ -166,4 +166,11 @@ public class ByteArrayOwlReader extends BaseOwlReader {
 		return position;
 	}
 
+	@Override
+	public void close() throws IOException {
+		synchronized (readLock) {
+			position = in.length;
+		}
+	}
+
 }

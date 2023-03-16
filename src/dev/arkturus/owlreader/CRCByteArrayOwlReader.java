@@ -117,4 +117,9 @@ public class CRCByteArrayOwlReader extends BaseOwlReader implements CRCReader {
 		return reader.position();
 	}
 
+	@Override
+	public void close() throws IOException {
+		reader.close();
+	}
+
 }
