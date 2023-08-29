@@ -8,8 +8,8 @@ import dev.arkturus.owl.Endian;
 
 public abstract class BaseOwlReader implements OwlReader {
 
-	private Endian endian = Endian.BIG;
-	private Charset encoding = StandardCharsets.UTF_8;
+	private volatile Endian endian = Endian.BIG;
+	private volatile Charset encoding = StandardCharsets.UTF_8;
 
 	@Override
 	public Endian getEndian() {
@@ -33,47 +33,47 @@ public abstract class BaseOwlReader implements OwlReader {
 
 	@Override
 	public short readShort() throws IOException {
-		return endian.readShort(read(2), 0);
+		return getEndian().readShort(read(2), 0);
 	}
 
 	@Override
 	public int readInt() throws IOException {
-		return endian.readInt(read(4), 0);
+		return getEndian().readInt(read(4), 0);
 	}
 
 	@Override
 	public long readLong() throws IOException {
-		return endian.readLong(read(8), 0);
+		return getEndian().readLong(read(8), 0);
 	}
 
 	@Override
 	public String readString(int bytes) throws IOException {
-		return readString(bytes, encoding);
+		return readString(bytes, getDefaultEncoding());
 	}
 
 	@Override
 	public String readNullString() throws IOException {
-		return readNullString(encoding);
+		return readNullString(getDefaultEncoding());
 	}
 
 	@Override
 	public String readPascalByte() throws IOException {
-		return readPascalByte(encoding);
+		return readPascalByte(getDefaultEncoding());
 	}
 
 	@Override
 	public String readPascalShort() throws IOException {
-		return readPascalShort(encoding);
+		return readPascalShort(getDefaultEncoding());
 	}
 
 	@Override
 	public String readPascalInt() throws IOException {
-		return readPascalInt(encoding);
+		return readPascalInt(getDefaultEncoding());
 	}
 
 	@Override
 	public String readLine() throws IOException {
-		return readLine(encoding);
+		return readLine(getDefaultEncoding());
 	}
 
 }
