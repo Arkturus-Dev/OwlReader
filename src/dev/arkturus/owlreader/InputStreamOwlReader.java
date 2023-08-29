@@ -10,10 +10,10 @@ import dev.arkturus.owl.Endian;
 
 public class InputStreamOwlReader extends BaseOwlReader {
 
-	private final Object	readLock	= new Object();
-	private InputStream		in;
-	private byte[]			buffer		= new byte[1024];
-	private int				position;
+	private final Object readLock = new Object();
+	private InputStream in;
+	private byte[] buffer = new byte[1024];
+	private int position;
 
 	/**
 	 * Creates an {@link OwlReader} backed by the given {@link InputStream}.
@@ -29,11 +29,11 @@ public class InputStreamOwlReader extends BaseOwlReader {
 		setEndian(endian);
 	}
 
-	private void fullRead(byte[] buffer, int count) throws IOException {
-		fullRead(buffer, 0, count);
+	private byte[] fullRead(byte[] buffer, int count) throws IOException {
+		return fullRead(buffer, 0, count);
 	}
 
-	private void fullRead(byte[] buffer, int offset, int count) throws IOException {
+	private byte[] fullRead(byte[] buffer, int offset, int count) throws IOException {
 		if (buffer.length < offset + count)
 			buffer = Arrays.copyOf(buffer, Math.max(buffer.length * 2, offset + count));
 		int read = 0;
@@ -45,12 +45,13 @@ public class InputStreamOwlReader extends BaseOwlReader {
 			read += i;
 		}
 		position += read;
+		return buffer;
 	}
 
 	@Override
 	public byte readByte() throws IOException {
 		synchronized (readLock) {
-			fullRead(buffer, 1);
+			buffer = fullRead(buffer, 1);
 			return buffer[0];
 		}
 	}
@@ -58,7 +59,7 @@ public class InputStreamOwlReader extends BaseOwlReader {
 	@Override
 	public short readShort() throws IOException {
 		synchronized (readLock) {
-			fullRead(buffer, 2);
+			buffer = fullRead(buffer, 2);
 			return getEndian().readShort(buffer, 0);
 		}
 	}
@@ -66,7 +67,7 @@ public class InputStreamOwlReader extends BaseOwlReader {
 	@Override
 	public int readInt() throws IOException {
 		synchronized (readLock) {
-			fullRead(buffer, 4);
+			buffer = fullRead(buffer, 4);
 			return getEndian().readInt(buffer, 0);
 		}
 	}
@@ -74,7 +75,7 @@ public class InputStreamOwlReader extends BaseOwlReader {
 	@Override
 	public long readLong() throws IOException {
 		synchronized (readLock) {
-			fullRead(buffer, 8);
+			buffer = fullRead(buffer, 8);
 			return getEndian().readLong(buffer, 0);
 		}
 	}
@@ -82,24 +83,32 @@ public class InputStreamOwlReader extends BaseOwlReader {
 	@Override
 	public byte[] read(int length) throws IOException {
 		synchronized (readLock) {
-			fullRead(buffer, length);
+			buffer = fullRead(buffer, length);
 			return Arrays.copyOf(buffer, length);
 		}
 	}
 
 	@Override
-	public byte[] read(byte[] buffer, int off, int len) throws IOException {
-		synchronized (readLock) {
-			fullRead(this.buffer, len);
-			System.arraycopy(this.buffer, 0, buffer, off, len);
-			return buffer;
+	public int read(byte[] buffer, int off, int len) throws IOException {
+		synchronized (readLock) {		//ONO
+			ensureBuffer(len);
+			int read = 0;
+			int i = 0;
+			while (read < len) {
+				i = in.read(buffer, read, len - read);
+				if (i == -1)
+					break;
+				read += i;
+			}
+			position += read;
+			return read;
 		}
 	}
 
 	@Override
 	public String readString(int bytes, Charset encoding) throws IOException {
 		synchronized (readLock) {
-			fullRead(buffer, bytes);
+			buffer = fullRead(buffer, bytes);
 			return new String(buffer, 0, bytes, encoding);
 		}
 	}
@@ -107,10 +116,10 @@ public class InputStreamOwlReader extends BaseOwlReader {
 	@Override
 	public String readNullString(Charset encoding) throws IOException {
 		synchronized (readLock) {
-			fullRead(buffer, 1);
+			buffer = fullRead(buffer, 1);
 			int size = 0;
 			while (buffer[size++] != 0)
-				fullRead(buffer, size, 1);
+				buffer = fullRead(buffer, size, 1);
 			return new String(buffer, 0, size - 1, encoding);
 		}
 	}
@@ -118,9 +127,8 @@ public class InputStreamOwlReader extends BaseOwlReader {
 	@Override
 	public String readPascalByte(Charset encoding) throws IOException {
 		synchronized (readLock) {
-			fullRead(buffer, 1);
-			byte b = buffer[0];
-			fullRead(buffer, b);
+			short b = readUByte();
+			buffer = fullRead(buffer, b);
 			return new String(buffer, 0, b, encoding);
 		}
 	}
@@ -128,9 +136,8 @@ public class InputStreamOwlReader extends BaseOwlReader {
 	@Override
 	public String readPascalShort(Charset encoding) throws IOException {
 		synchronized (readLock) {
-			fullRead(buffer, 2);
-			short s = (short) (((buffer[0] & 0xFF) << 8) + (buffer[1] & 0xFF));
-			fullRead(buffer, s);
+			int s = readUShort();
+			buffer = fullRead(buffer, s);
 			return new String(buffer, 0, s, encoding);
 		}
 	}
@@ -138,10 +145,8 @@ public class InputStreamOwlReader extends BaseOwlReader {
 	@Override
 	public String readPascalInt(Charset encoding) throws IOException {
 		synchronized (readLock) {
-			fullRead(buffer, 2);
-			int i = ((buffer[0] & 0xFF) << 24) + ((buffer[1] & 0xFF) << 16) + ((buffer[2] & 0xFF) << 8)
-					+ (buffer[3] & 0xFF);
-			fullRead(buffer, i);
+			int i = readSUInt();
+			buffer = fullRead(buffer, i);
 			return new String(buffer, 0, i, encoding);
 		}
 	}
@@ -152,7 +157,8 @@ public class InputStreamOwlReader extends BaseOwlReader {
 			int read = 0;
 			buffer[read] = readByte();
 			while (buffer[read++] != '\n') {
-				ensureBuffer(read + 1);
+				if (buffer.length < read + 1)
+					buffer = Arrays.copyOf(buffer, Math.max(buffer.length * 2, read + 1));
 				buffer[read] = readByte();
 			}
 			if (read == 1)
@@ -194,8 +200,8 @@ public class InputStreamOwlReader extends BaseOwlReader {
 
 	private class FramedInputStreamOwlReader extends BaseOwlReader {
 
-		private int	position;
-		private int	length;
+		private int position;
+		private int length;
 
 		public FramedInputStreamOwlReader(int length) {
 			this.length = length;
