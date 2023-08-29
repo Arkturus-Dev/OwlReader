@@ -19,9 +19,11 @@ public class CRCByteArrayOwlReader extends BaseOwlReader implements CRCReader {
 
 	@Override
 	public int getCRC() {
-		long value = crc.getValue();
-		crc.reset();
-		return (int) value;
+		synchronized (reader.readLock) {
+			long value = crc.getValue();
+			crc.reset();
+			return (int) value;
+		}
 	}
 
 	@Override
@@ -60,7 +62,6 @@ public class CRCByteArrayOwlReader extends BaseOwlReader implements CRCReader {
 		}
 	}
 
-	// TODO: needs fixing
 	@Override
 	public int read(byte[] buffer, int off, int len) throws IOException {
 		synchronized (reader.readLock) {
@@ -70,56 +71,91 @@ public class CRCByteArrayOwlReader extends BaseOwlReader implements CRCReader {
 		}
 	}
 
-	// These methods probably break CRC.
-
 	@Override
 	public String readString(int bytes, Charset encoding) throws IOException {
-		return reader.readString(bytes, encoding);
+		synchronized (reader.readLock) {
+			String s = reader.readString(bytes, encoding);
+			addCRC(bytes);
+			return s;
+		}
 	}
 
 	@Override
 	public String readNullString(Charset encoding) throws IOException {
-		return reader.readNullString(encoding);
+		synchronized (reader.readLock) {
+			int start = reader.position();
+			String s = reader.readNullString(encoding);
+			addCRC(reader.position() - start);
+			return s;
+		}
 	}
 
 	@Override
 	public String readPascalByte(Charset encoding) throws IOException {
-		return reader.readPascalByte(encoding);
+		synchronized (reader.readLock) {
+			int start = reader.position();
+			String s = reader.readPascalByte(encoding);
+			addCRC(reader.position() - start);
+			return s;
+		}
 	}
 
 	@Override
 	public String readPascalShort(Charset encoding) throws IOException {
-		return reader.readPascalShort(encoding);
+		synchronized (reader.readLock) {
+			int start = reader.position();
+			String s = reader.readPascalShort(encoding);
+			addCRC(reader.position() - start);
+			return s;
+		}
 	}
 
 	@Override
 	public String readPascalInt(Charset encoding) throws IOException {
-		return reader.readPascalInt(encoding);
+		synchronized (reader.readLock) {
+			int start = reader.position();
+			String s = reader.readPascalInt(encoding);
+			addCRC(reader.position() - start);
+			return s;
+		}
 	}
 
 	@Override
 	public String readLine(Charset encoding) throws IOException {
-		return reader.readLine(encoding);
+		synchronized (reader.readLock) {
+			int start = reader.position();
+			String s = reader.readLine(encoding);
+			addCRC(reader.position() - start);
+			return s;
+		}
 	}
 
 	@Override
 	public void skipBytes(long count) throws IOException {
-		reader.skipBytes(count);
+		synchronized (reader.readLock) {
+			reader.skipBytes(count);
+		}
 	}
 
 	@Override
 	public boolean hasData() {
-		return reader.hasData();
+		synchronized (reader.readLock) {
+			return reader.hasData();
+		}
 	}
 
 	@Override
 	public int position() {
-		return reader.position();
+		synchronized (reader.readLock) {
+			return reader.position();
+		}
 	}
 
 	@Override
 	public void close() throws IOException {
-		reader.close();
+		synchronized (reader.readLock) {
+			reader.close();
+		}
 	}
 
 }

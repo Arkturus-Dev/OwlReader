@@ -3,6 +3,7 @@ package dev.arkturus.owlreader;
 import java.io.EOFException;
 import java.io.IOException;
 import java.nio.charset.Charset;
+import java.util.Objects;
 
 import dev.arkturus.owl.Endian;
 
@@ -10,7 +11,7 @@ public class ByteArrayOwlReader extends BaseOwlReader {
 
 	protected final Object readLock = new Object();
 	protected byte[]       in;
-	protected int          position = 0;
+	protected volatile int position = 0;
 
 	/**
 	 * Creates an {@link OwlReader} backed by the given byte[].
@@ -77,6 +78,7 @@ public class ByteArrayOwlReader extends BaseOwlReader {
 
 	@Override
 	public int read(byte[] buffer, int off, int len) throws IOException {
+		Objects.checkFromIndexSize(off, len, buffer.length);
 		synchronized (readLock) {
 			int size = Math.max(0, Math.min(len, in.length - position));
 			System.arraycopy(in, position, buffer, off, size);
@@ -87,6 +89,8 @@ public class ByteArrayOwlReader extends BaseOwlReader {
 
 	@Override
 	public String readString(int bytes, Charset encoding) throws IOException {
+		if (bytes < 0)
+			throw new IndexOutOfBoundsException("bytes cannot be negative: " + bytes);
 		synchronized (readLock) {
 			if (position + bytes > in.length)
 				throw new EOFException("Unexpected EOF.");
@@ -151,19 +155,25 @@ public class ByteArrayOwlReader extends BaseOwlReader {
 
 	@Override
 	public void skipBytes(long count) throws IOException {
+		if (count < 0)
+			throw new IndexOutOfBoundsException("count cannot be negative: " + count);
 		synchronized (readLock) {
-			position += count;
+			position = (int) Math.min((long) in.length, (long) position + count);
 		}
 	}
 
 	@Override
 	public boolean hasData() {
-		return position < in.length;
+		synchronized (readLock) {
+			return position < in.length;
+		}
 	}
 
 	@Override
 	public int position() {
-		return position;
+		synchronized (readLock) {
+			return position;
+		}
 	}
 
 	@Override
