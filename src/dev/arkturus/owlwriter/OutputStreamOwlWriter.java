@@ -34,6 +34,12 @@ public class OutputStreamOwlWriter extends BaseOwlWriter {
 	}
 
 	@Override
+	public synchronized void writeInt24(int i) throws IOException {
+		getEndian().writeInt24(i, buffer, 0);
+		out.write(buffer, 0, 3);
+	}
+
+	@Override
 	public synchronized void writeInt(int i) throws IOException {
 		getEndian().writeInt(i, buffer, 0);
 		out.write(buffer, 0, 4);
@@ -110,6 +116,12 @@ public class OutputStreamOwlWriter extends BaseOwlWriter {
 		public synchronized void writeShort(short s) throws IOException {
 			advance(2);
 			OutputStreamOwlWriter.this.writeShort(s);
+		}
+
+		@Override
+		public synchronized void writeInt24(int i) throws IOException {
+			advance(3);
+			OutputStreamOwlWriter.this.writeInt24(i);
 		}
 
 		@Override

@@ -89,6 +89,23 @@ public class MemorySegmentOwlWriter extends BaseOwlWriter {
 	}
 
 	@Override
+	public void writeInt24(int i) throws IOException {
+		synchronized (writeLock) {
+			checkCapacity(3);
+			if (getEndian() == Endian.LITTLE) {
+				segment.set(ValueLayout.JAVA_BYTE, position, (byte) (i & 0xFF));
+				segment.set(ValueLayout.JAVA_BYTE, position + 1, (byte) ((i >>> 8) & 0xFF));
+				segment.set(ValueLayout.JAVA_BYTE, position + 2, (byte) ((i >>> 16) & 0xFF));
+			} else {
+				segment.set(ValueLayout.JAVA_BYTE, position, (byte) ((i >>> 16) & 0xFF));
+				segment.set(ValueLayout.JAVA_BYTE, position + 1, (byte) ((i >>> 8) & 0xFF));
+				segment.set(ValueLayout.JAVA_BYTE, position + 2, (byte) (i & 0xFF));
+			}
+			position += 3;
+		}
+	}
+
+	@Override
 	public void writeInt(int i) throws IOException {
 		synchronized (writeLock) {
 			checkCapacity(4);

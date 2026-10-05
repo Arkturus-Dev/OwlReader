@@ -79,6 +79,20 @@ public class InputStreamOwlReader extends BaseOwlReader {
 	}
 
 	@Override
+	public int readInt24() throws IOException {
+		synchronized (readLock) {
+			return getEndian().readInt24(fullRead(3), 0);
+		}
+	}
+
+	@Override
+	public int readUInt24() throws IOException {
+		synchronized (readLock) {
+			return getEndian().readUInt24(fullRead(3), 0);
+		}
+	}
+
+	@Override
 	public long readLong() throws IOException {
 		synchronized (readLock) {
 			return getEndian().readLong(fullRead(8), 0);
@@ -328,6 +342,22 @@ public class InputStreamOwlReader extends BaseOwlReader {
 			synchronized (readLock) {
 				advance(2);
 				return InputStreamOwlReader.this.readShort();
+			}
+		}
+
+		@Override
+		public int readInt24() throws IOException {
+			synchronized (readLock) {
+				advance(3);
+				return InputStreamOwlReader.this.readInt24();
+			}
+		}
+
+		@Override
+		public int readUInt24() throws IOException {
+			synchronized (readLock) {
+				advance(3);
+				return InputStreamOwlReader.this.readUInt24();
 			}
 		}
 

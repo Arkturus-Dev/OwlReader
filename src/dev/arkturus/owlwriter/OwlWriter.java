@@ -19,6 +19,28 @@ public interface OwlWriter extends Closeable {
 
 	public void writeShort(short s) throws IOException;
 
+	/**
+	 * Writes a 24-bit medium integer (3 bytes) according to the current endianness.
+	 *
+	 * @param i the integer value to write (lower 24 bits).
+	 * @throws IOException if an I/O error occurs.
+	 */
+	public default void writeInt24(int i) throws IOException {
+		byte[] buffer = new byte[3];
+		getEndian().writeInt24(i, buffer, 0);
+		write(buffer);
+	}
+
+	/**
+	 * Writes a 24-bit medium integer (3 bytes) according to the current endianness. Alias for {@link #writeInt24(int)}.
+	 *
+	 * @param i the integer value to write (lower 24 bits).
+	 * @throws IOException if an I/O error occurs.
+	 */
+	public default void writeMedium(int i) throws IOException {
+		writeInt24(i);
+	}
+
 	public void writeInt(int i) throws IOException;
 
 	public void writeLong(long l) throws IOException;
@@ -117,6 +139,24 @@ public interface OwlWriter extends Closeable {
 		if (i < 0 || i > Short.MAX_VALUE)
 			throw new UnsafeUnsignedException(short.class);
 		writeShort((short) i);
+	}
+
+	public default void writeUInt24(int i) throws IOException {
+		writeInt24(i);
+	}
+
+	public default void writeUMedium(int i) throws IOException {
+		writeInt24(i);
+	}
+
+	public default void writeSUInt24(int i) throws IOException {
+		if (i < 0 || i > 0x007FFFFF)
+			throw new UnsafeUnsignedException(int.class);
+		writeInt24(i);
+	}
+
+	public default void writeSUMedium(int i) throws IOException {
+		writeSUInt24(i);
 	}
 
 	public default void writeUInt(long l) throws IOException {

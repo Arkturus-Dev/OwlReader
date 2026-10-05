@@ -49,6 +49,19 @@ public class ByteArrayOwlWriter extends BaseOwlWriter {
 	}
 
 	@Override
+	public void writeInt24(int i) throws IOException {
+		synchronized (writeLock) {
+			try {
+				getEndian().writeInt24(i, out, position);
+				position += 3;
+			} catch (ArrayIndexOutOfBoundsException e) {
+				position = out.length;
+				throw new EOFException(e.getMessage());
+			}
+		}
+	}
+
+	@Override
 	public void writeInt(int i) throws IOException {
 		synchronized (writeLock) {
 			try {

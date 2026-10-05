@@ -80,6 +80,25 @@ public class NIOWriter extends BaseOwlWriter {
 	}
 
 	@Override
+	public void writeInt24(int i) throws IOException {
+		synchronized (writeLock) {
+			if (buffer.remaining() < 3) {
+				buffer.position(buffer.limit());
+				throw new EOFException("Buffer capacity exceeded.");
+			}
+			if (getEndian() == Endian.LITTLE) {
+				buffer.put((byte) (i & 0xFF));
+				buffer.put((byte) ((i >>> 8) & 0xFF));
+				buffer.put((byte) ((i >>> 16) & 0xFF));
+			} else {
+				buffer.put((byte) ((i >>> 16) & 0xFF));
+				buffer.put((byte) ((i >>> 8) & 0xFF));
+				buffer.put((byte) (i & 0xFF));
+			}
+		}
+	}
+
+	@Override
 	public void writeInt(int i) throws IOException {
 		synchronized (writeLock) {
 			try {

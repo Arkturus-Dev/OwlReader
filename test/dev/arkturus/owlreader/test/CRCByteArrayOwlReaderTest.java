@@ -100,4 +100,23 @@ public class CRCByteArrayOwlReaderTest {
 		expectedCrc.update(data, 0, 1000);
 		assertEquals((int) expectedCrc.getValue(), crcReader.getCRC());
 	}
+
+	@Test
+	public void testCRCInt24() throws Exception {
+		byte[] data = new byte[16];
+		ByteArrayOwlWriter writer = new ByteArrayOwlWriter(data);
+		writer.writeInt24(0x123456);
+		writer.writeUInt24(0xAABBCC);
+
+		CRC32 expectedCrc = new CRC32();
+		expectedCrc.update(data, 0, 6);
+
+		ByteArrayOwlReader baseReader = new ByteArrayOwlReader(data);
+		CRCByteArrayOwlReader crcReader = new CRCByteArrayOwlReader(baseReader);
+
+		assertEquals(0x123456, crcReader.readInt24());
+		assertEquals(0xAABBCC, crcReader.readUInt24());
+
+		assertEquals((int) expectedCrc.getValue(), crcReader.getCRC());
+	}
 }

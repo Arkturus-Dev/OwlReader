@@ -82,6 +82,30 @@ public class ByteArrayOwlReader extends BaseOwlReader {
 	}
 
 	@Override
+	public int readInt24() throws IOException {
+		synchronized (readLock) {
+			if (position + 3 > length) {
+				throw new EOFException("Unexpected EOF.");
+			}
+			int value = getEndian().readInt24(in, offset + position);
+			position += 3;
+			return value;
+		}
+	}
+
+	@Override
+	public int readUInt24() throws IOException {
+		synchronized (readLock) {
+			if (position + 3 > length) {
+				throw new EOFException("Unexpected EOF.");
+			}
+			int value = getEndian().readUInt24(in, offset + position);
+			position += 3;
+			return value;
+		}
+	}
+
+	@Override
 	public int readInt() throws IOException {
 		synchronized (readLock) {
 			if (position + 4 > length) {
@@ -353,6 +377,22 @@ public class ByteArrayOwlReader extends BaseOwlReader {
 			synchronized (readLock) {
 				advanceFrame(2);
 				return ByteArrayOwlReader.this.readShort();
+			}
+		}
+
+		@Override
+		public int readInt24() throws IOException {
+			synchronized (readLock) {
+				advanceFrame(3);
+				return ByteArrayOwlReader.this.readInt24();
+			}
+		}
+
+		@Override
+		public int readUInt24() throws IOException {
+			synchronized (readLock) {
+				advanceFrame(3);
+				return ByteArrayOwlReader.this.readUInt24();
 			}
 		}
 

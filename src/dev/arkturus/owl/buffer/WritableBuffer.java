@@ -163,6 +163,34 @@ public interface WritableBuffer {
 
 	public WritableBuffer writeBytes(short s);
 
+	public WritableBuffer writeBytes24(int i);
+
+	public default WritableBuffer writeInt24(int i) {
+		return writeBytes24(i);
+	}
+
+	public default WritableBuffer writeMedium(int i) {
+		return writeInt24(i);
+	}
+
+	public default WritableBuffer writeUInt24(int i) {
+		return writeInt24(i);
+	}
+
+	public default WritableBuffer writeUMedium(int i) {
+		return writeInt24(i);
+	}
+
+	public default WritableBuffer writeSUInt24(int i) {
+		if (i < 0 || i > 0x007FFFFF)
+			throw new dev.arkturus.owl.UnsafeUnsignedException(int.class);
+		return writeInt24(i);
+	}
+
+	public default WritableBuffer writeSUMedium(int i) {
+		return writeSUInt24(i);
+	}
+
 	public WritableBuffer writeBytes(int i);
 
 	public WritableBuffer writeBytes(long l);

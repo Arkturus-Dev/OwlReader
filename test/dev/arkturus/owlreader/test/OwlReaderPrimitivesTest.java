@@ -78,4 +78,66 @@ public class OwlReaderPrimitivesTest {
 		assertThrows(UnsafeUnsignedException.class, reader::readSUShort);
 		assertThrows(UnsafeUnsignedException.class, reader::readSUInt);
 	}
+
+	@ParameterizedTest(name = "{0}")
+	@MethodSource("dev.arkturus.owlreader.test.OwlReaderTestFixtures#allReaders")
+	public void testReadInt24BigEndian(ReaderFactory factory) throws Exception {
+		byte[] data = new byte[16];
+		ByteArrayOwlWriter writer = new ByteArrayOwlWriter(data, Endian.BIG);
+		writer.writeInt24(0x123456);
+		writer.writeInt24(-42);
+		writer.writeInt24(8388607);
+		writer.writeInt24(-8388608);
+
+		OwlReader reader = factory.create(data, Endian.BIG);
+		assertEquals(0x123456, reader.readInt24());
+		assertEquals(-42, reader.readMedium());
+		assertEquals(8388607, reader.readInt24());
+		assertEquals(-8388608, reader.readMedium());
+	}
+
+	@ParameterizedTest(name = "{0}")
+	@MethodSource("dev.arkturus.owlreader.test.OwlReaderTestFixtures#allReaders")
+	public void testReadInt24LittleEndian(ReaderFactory factory) throws Exception {
+		byte[] data = new byte[16];
+		ByteArrayOwlWriter writer = new ByteArrayOwlWriter(data, Endian.LITTLE);
+		writer.writeInt24(0x123456);
+		writer.writeInt24(-42);
+		writer.writeInt24(8388607);
+		writer.writeInt24(-8388608);
+
+		OwlReader reader = factory.create(data, Endian.LITTLE);
+		assertEquals(0x123456, reader.readInt24());
+		assertEquals(-42, reader.readMedium());
+		assertEquals(8388607, reader.readInt24());
+		assertEquals(-8388608, reader.readMedium());
+	}
+
+	@ParameterizedTest(name = "{0}")
+	@MethodSource("dev.arkturus.owlreader.test.OwlReaderTestFixtures#allReaders")
+	public void testReadUInt24(ReaderFactory factory) throws Exception {
+		byte[] data = new byte[16];
+		ByteArrayOwlWriter writer = new ByteArrayOwlWriter(data);
+		writer.writeUInt24(0);
+		writer.writeUMedium(0x800000);
+		writer.writeUInt24(0xFFFFFF);
+
+		OwlReader reader = factory.create(data);
+		assertEquals(0, reader.readUInt24());
+		assertEquals(0x800000, reader.readUMedium());
+		assertEquals(0xFFFFFF, reader.readUnsignedInt24());
+	}
+
+	@ParameterizedTest(name = "{0}")
+	@MethodSource("dev.arkturus.owlreader.test.OwlReaderTestFixtures#allReaders")
+	public void testReadSUInt24(ReaderFactory factory) throws Exception {
+		byte[] data = new byte[16];
+		ByteArrayOwlWriter writer = new ByteArrayOwlWriter(data);
+		writer.writeSUInt24(8388607);
+		writer.writeInt24(-1);
+
+		OwlReader reader = factory.create(data);
+		assertEquals(8388607, reader.readSUInt24());
+		assertThrows(UnsafeUnsignedException.class, reader::readSUInt24);
+	}
 }

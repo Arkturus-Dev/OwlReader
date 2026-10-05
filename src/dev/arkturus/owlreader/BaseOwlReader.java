@@ -37,6 +37,16 @@ public abstract class BaseOwlReader implements OwlReader {
 	}
 
 	@Override
+	public int readInt24() throws IOException {
+		return getEndian().readInt24(read(3), 0);
+	}
+
+	@Override
+	public int readUInt24() throws IOException {
+		return getEndian().readUInt24(read(3), 0);
+	}
+
+	@Override
 	public int readInt() throws IOException {
 		return getEndian().readInt(read(4), 0);
 	}

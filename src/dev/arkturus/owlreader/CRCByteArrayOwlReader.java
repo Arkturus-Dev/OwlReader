@@ -45,6 +45,24 @@ public class CRCByteArrayOwlReader extends BaseOwlReader implements CRCReader {
 	}
 
 	@Override
+	public int readInt24() throws IOException {
+		synchronized (reader.readLock) {
+			int i = reader.readInt24();
+			addCRC(3);
+			return i;
+		}
+	}
+
+	@Override
+	public int readUInt24() throws IOException {
+		synchronized (reader.readLock) {
+			int i = reader.readUInt24();
+			addCRC(3);
+			return i;
+		}
+	}
+
+	@Override
 	public int readInt() throws IOException {
 		synchronized (reader.readLock) {
 			int i = reader.readInt();

@@ -37,4 +37,18 @@ public class FramedOwlWriterTest {
 		frame.writeByte((byte) 2);
 		assertThrows(EOFException.class, () -> frame.writeByte((byte) 3));
 	}
+
+	@Test
+	public void testFramedWriterInt24() throws Exception {
+		ByteArrayOutputStream baos = new ByteArrayOutputStream();
+		OutputStreamOwlWriter parent = new OutputStreamOwlWriter(baos);
+
+		OwlWriter frame = parent.frame(4);
+		frame.writeInt24(0x123456);
+		frame.close();
+
+		byte[] out = baos.toByteArray();
+		assertEquals(4, out.length);
+		assertArrayEquals(new byte[] { 0x12, 0x34, 0x56, 0 }, out);
+	}
 }
