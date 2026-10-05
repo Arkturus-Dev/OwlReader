@@ -460,6 +460,45 @@ public interface OwlReader extends Closeable, Readable {
 		throw new UnsupportedOperationException();
 	}
 
+	/**
+	 * Creates a detached, independent {@link OwlReader} containing the next <code>length</code> bytes starting from
+	 * {@link #position()}. The parent reader's position is immediately advanced by <code>length</code> bytes.
+	 * Reading from the slice has no side-effects on the parent reader, and closing the slice does not affect the
+	 * parent reader.
+	 *
+	 * @param length number of bytes in the slice.
+	 * @return an independent {@link OwlReader} bounded to <code>length</code> bytes.
+	 * @throws IOException if an I/O error or unexpected EOF occurs.
+	 */
+	public default OwlReader slice(int length) throws IOException {
+		if (length < 0) {
+			throw new IndexOutOfBoundsException("length cannot be negative: " + length);
+		}
+		byte[] data = new byte[length];
+		int totalRead = 0;
+		while (totalRead < length) {
+			int read = this.read(data, totalRead, length - totalRead);
+			if (read <= 0) {
+				throw new EOFException("Unexpected EOF while slicing: requested " + length + ", read " + totalRead);
+			}
+			totalRead += read;
+		}
+		return new ByteArrayOwlReader(data, getEndian());
+	}
+
+	/**
+	 * Creates a detached, independent {@link OwlReader} containing <code>length</code> bytes starting at the specified
+	 * absolute <code>offset</code>. The parent reader's current {@link #position()} is not modified.
+	 *
+	 * @param offset absolute offset to start the slice.
+	 * @param length number of bytes in the slice.
+	 * @return an independent {@link OwlReader} bounded to <code>length</code> bytes.
+	 * @throws IOException if an I/O error or unexpected EOF occurs.
+	 */
+	public default OwlReader slice(int offset, int length) throws IOException {
+		throw new UnsupportedOperationException();
+	}
+
 	public default InputStream toInputStream() {
 		return new InputStream() {
 

@@ -15,6 +15,7 @@ import java.util.function.Function;
 import dev.arkturus.nullanalysis.annotations.Nullable;
 import dev.arkturus.owl.Endian;
 import dev.arkturus.owlreader.BaseOwlReader;
+import dev.arkturus.owlreader.ByteArrayOwlReader;
 import dev.arkturus.owlreader.OwlReader;
 import dev.arkturus.owlwriter.BaseOwlWriter;
 import dev.arkturus.owlwriter.OwlWriter;
@@ -437,6 +438,188 @@ public class Buffer implements ReadableBuffer, WritableBuffer {
 			readIndex = writeIndex;
 		}
 
+		@Override
+		public OwlReader slice(int sliceLength) throws IOException {
+			try {
+				return Buffer.this.slice(sliceLength);
+			} catch (UncheckedIOException e) {
+				if (e.getCause() instanceof IOException) {
+					throw (IOException) e.getCause();
+				}
+				throw e;
+			}
+		}
+
+		@Override
+		public OwlReader slice(int sliceOffset, int sliceLength) throws IOException {
+			return Buffer.this.slice(sliceOffset, sliceLength);
+		}
+
+		@Override
+		public OwlReader frame(int frameLength) {
+			if (frameLength < 0) {
+				throw new IndexOutOfBoundsException("frameLength cannot be negative: " + frameLength);
+			}
+			if (readIndex + frameLength > writeIndex) {
+				throw new IllegalArgumentException("frameLength exceeds available data: " + frameLength + " > " + (writeIndex - readIndex));
+			}
+			return new FramedBufferReader(frameLength);
+		}
+
+		private class FramedBufferReader extends BaseOwlReader {
+			private final int frameBound;
+			private int       framePos = 0;
+
+			public FramedBufferReader(int frameBound) {
+				this.frameBound = frameBound;
+				setEndian(Buffer.this.endian);
+			}
+
+			private void advanceFrame(int count) throws EOFException {
+				if (framePos + count > frameBound) {
+					throw new EOFException("End of frame reached.");
+				}
+				framePos += count;
+			}
+
+			@Override
+			public byte readByte() throws IOException {
+				advanceFrame(1);
+				return BufferReader.this.readByte();
+			}
+
+			@Override
+			public short readShort() throws IOException {
+				advanceFrame(2);
+				return BufferReader.this.readShort();
+			}
+
+			@Override
+			public int readInt() throws IOException {
+				advanceFrame(4);
+				return BufferReader.this.readInt();
+			}
+
+			@Override
+			public long readLong() throws IOException {
+				advanceFrame(8);
+				return BufferReader.this.readLong();
+			}
+
+			@Override
+			public int read(byte[] out, int off, int len) throws IOException {
+				Objects.checkFromIndexSize(off, len, out.length);
+				int toRead = Math.min(len, frameBound - framePos);
+				int read = BufferReader.this.read(out, off, toRead);
+				framePos += read;
+				return read;
+			}
+
+			@Override
+			public String readString(int bytes, Charset encoding) throws IOException {
+				advanceFrame(bytes);
+				return BufferReader.this.readString(bytes, encoding);
+			}
+
+			@Override
+			public String readNullString(Charset encoding) throws IOException {
+				byte[] buf = new byte[frameBound - framePos];
+				int size = 0;
+				boolean foundNull = false;
+				while (framePos < frameBound) {
+					advanceFrame(1);
+					byte b = BufferReader.this.readByte();
+					if (b == 0) {
+						foundNull = true;
+						break;
+					}
+					buf[size++] = b;
+				}
+				if (!foundNull) {
+					throw new EOFException("Unexpected EOF searching for null terminator.");
+				}
+				return new String(buf, 0, size, encoding);
+			}
+
+			@Override
+			public String readLine(Charset encoding) throws IOException {
+				int remaining = frameBound - framePos;
+				if (remaining <= 0) {
+					return "";
+				}
+				byte[] lineBuf = new byte[remaining];
+				int size = 0;
+				boolean foundNewline = false;
+				while (framePos < frameBound) {
+					advanceFrame(1);
+					byte b = BufferReader.this.readByte();
+					if (b == '\n') {
+						foundNewline = true;
+						break;
+					}
+					lineBuf[size++] = b;
+				}
+				if (size == 0 && !foundNewline) {
+					return "";
+				}
+				int len = (size > 0 && lineBuf[size - 1] == '\r') ? size - 1 : size;
+				return new String(lineBuf, 0, len, encoding);
+			}
+
+			@Override
+			public void skipBytes(long count) throws IOException {
+				long toSkip = Math.min((long) (frameBound - framePos), count);
+				advanceFrame((int) toSkip);
+				BufferReader.this.skipBytes(toSkip);
+			}
+
+			@Override
+			public boolean hasData() {
+				return framePos < frameBound && BufferReader.this.hasData();
+			}
+
+			@Override
+			public int position() {
+				return framePos;
+			}
+
+			@Override
+			public void close() throws IOException {
+				int unread = frameBound - framePos;
+				if (unread > 0) {
+					BufferReader.this.skipBytes(unread);
+					framePos = frameBound;
+				}
+			}
+		}
+
+	}
+
+	@Override
+	public OwlReader slice(int sliceLength) {
+		if (sliceLength < 0) {
+			throw new IndexOutOfBoundsException("sliceLength cannot be negative: " + sliceLength);
+		}
+		if (readIndex + sliceLength > writeIndex) {
+			throw new UncheckedIOException(new EOFException("Unexpected EOF while slicing: requested " + sliceLength + ", available " + (writeIndex - readIndex)));
+		}
+		checkNewline(sliceLength);
+		int sliceOffset = readIndex;
+		readIndex += sliceLength;
+		return new ByteArrayOwlReader(buffer, sliceOffset, sliceLength, endian);
+	}
+
+	@Override
+	public OwlReader slice(int sliceOffset, int sliceLength) {
+		if (sliceOffset < 0 || sliceLength < 0 || sliceOffset + sliceLength > writeIndex) {
+			throw new IndexOutOfBoundsException("Invalid slice bounds: offset=" + sliceOffset + ", length=" + sliceLength + ", limit=" + writeIndex);
+		}
+		return new ByteArrayOwlReader(buffer, sliceOffset, sliceLength, endian);
+	}
+
+	@Override
+	public OwlReader frame(int frameLength) {
+		return reader().frame(frameLength);
 	}
 
 	// WritableBuffer

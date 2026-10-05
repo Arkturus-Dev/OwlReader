@@ -153,4 +153,16 @@ public interface ReadableBuffer extends Readable {
 		throw new UnsupportedOperationException();
 	}
 
+	public default OwlReader slice(int length) {
+		throw new UnsupportedOperationException();
+	}
+
+	public default OwlReader slice(int offset, int length) {
+		throw new UnsupportedOperationException();
+	}
+
+	public default OwlReader frame(int length) {
+		throw new UnsupportedOperationException();
+	}
+
 }
