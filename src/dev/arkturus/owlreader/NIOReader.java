@@ -251,6 +251,19 @@ public class NIOReader extends BaseOwlReader {
 		}
 	}
 
+	/**
+	 * Creates a detached, concurrent-safe zero-copy {@link OwlReader} containing the next <code>sliceLength</code>
+	 * bytes starting from the current {@link #position()}.
+	 * <p>
+	 * <b>Zero-Copy:</b> Shares the underlying {@link ByteBuffer} via {@link ByteBuffer#slice()} without copying.
+	 * The parent reader's {@link #position()} is immediately advanced by <code>sliceLength</code>.
+	 * The direct/heap nature and byte order of the parent buffer are preserved.
+	 *
+	 * @param sliceLength number of bytes to slice.
+	 * @return a zero-copy {@link NIOReader} spanning the sliced range.
+	 * @throws IndexOutOfBoundsException if <code>sliceLength &lt; 0</code>.
+	 * @throws EOFException if fewer than <code>sliceLength</code> bytes remain in this buffer.
+	 */
 	@Override
 	public OwlReader slice(int sliceLength) throws IOException {
 		if (sliceLength < 0) {
@@ -270,6 +283,18 @@ public class NIOReader extends BaseOwlReader {
 		}
 	}
 
+	/**
+	 * Creates a detached, concurrent-safe zero-copy {@link OwlReader} containing <code>sliceLength</code> bytes
+	 * starting at the specified absolute byte index <code>sliceOffset</code> within this buffer.
+	 * <p>
+	 * <b>Untouched Cursor:</b> This reader's current {@link #position()} is completely unmodified.
+	 *
+	 * @param sliceOffset absolute byte offset within this buffer.
+	 * @param sliceLength number of bytes in the slice.
+	 * @return a zero-copy {@link NIOReader} spanning the specified range.
+	 * @throws IndexOutOfBoundsException if <code>sliceOffset &lt; 0</code>, <code>sliceLength &lt; 0</code>, or
+	 *                                   <code>sliceOffset + sliceLength &gt; buffer.limit()</code>.
+	 */
 	@Override
 	public OwlReader slice(int sliceOffset, int sliceLength) throws IOException {
 		if (sliceOffset < 0 || sliceLength < 0 || sliceOffset + sliceLength > buffer.limit()) {
@@ -285,6 +310,18 @@ public class NIOReader extends BaseOwlReader {
 		}
 	}
 
+	/**
+	 * Creates a sequential bounded viewing window of size <code>frameLength</code> bytes starting from the current
+	 * {@link #position()}.
+	 * <p>
+	 * Reading from the framed reader advances this buffer's position in lockstep. Closing the framed reader
+	 * automatically skips any unconsumed bytes remaining in the frame window.
+	 *
+	 * @param frameLength number of bytes in the framed window. Must be non-negative and &lt;= remaining bytes.
+	 * @return an {@link OwlReader} scoped to read at most <code>frameLength</code> bytes.
+	 * @throws IndexOutOfBoundsException if <code>frameLength &lt; 0</code>.
+	 * @throws IllegalArgumentException if <code>frameLength</code> exceeds available remaining bytes.
+	 */
 	@Override
 	public OwlReader frame(int frameLength) {
 		if (frameLength < 0) {
