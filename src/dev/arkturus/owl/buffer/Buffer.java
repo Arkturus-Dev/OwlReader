@@ -3,6 +3,9 @@ package dev.arkturus.owl.buffer;
 import java.io.EOFException;
 import java.io.IOException;
 import java.io.UncheckedIOException;
+import java.nio.ByteBuffer;
+import java.nio.channels.ReadableByteChannel;
+import java.nio.channels.WritableByteChannel;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
@@ -706,6 +709,63 @@ public class Buffer implements ReadableBuffer, WritableBuffer {
 		public void close() {
 		}
 
+	}
+
+	public static Buffer wrap(ByteBuffer byteBuffer) {
+		Buffer b = new Buffer(byteBuffer.remaining());
+		b.write(byteBuffer);
+		return b;
+	}
+
+	@Override
+	public ByteBuffer asByteBuffer() {
+		return ByteBuffer.wrap(buffer, readIndex, writeIndex - readIndex).slice();
+	}
+
+	@Override
+	public int read(ByteBuffer dst) {
+		int toRead = Math.min(writeIndex - readIndex, dst.remaining());
+		if (toRead > 0) {
+			checkNewline(toRead);
+			dst.put(buffer, readIndex, toRead);
+			readIndex += toRead;
+		}
+		return toRead;
+	}
+
+	@Override
+	public Buffer write(ByteBuffer src) {
+		int len = src.remaining();
+		if (len > 0) {
+			ensureCapacity(len);
+			src.get(buffer, writeIndex, len);
+			writeIndex += len;
+		}
+		return this;
+	}
+
+	public int writeTo(WritableByteChannel channel) throws IOException {
+		int toWrite = writeIndex - readIndex;
+		if (toWrite == 0) {
+			return 0;
+		}
+		ByteBuffer bb = ByteBuffer.wrap(buffer, readIndex, toWrite);
+		int written = channel.write(bb);
+		if (written > 0) {
+			checkNewline(written);
+			readIndex += written;
+		}
+		return written;
+	}
+
+	public int readFrom(ReadableByteChannel channel) throws IOException {
+		ensureCapacity(1024);
+		ByteBuffer bb = ByteBuffer.wrap(buffer, writeIndex, buffer.length - writeIndex);
+		int read = channel.read(bb);
+		if (read > 0) {
+			writeIndex += read;
+		}
+		return read;
 	}
 
 	public void rewind() {
