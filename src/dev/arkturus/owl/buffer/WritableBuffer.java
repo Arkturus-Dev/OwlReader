@@ -168,4 +168,8 @@ public interface WritableBuffer {
 
 	public OwlWriter writer();
 
+	public default WritableBuffer write(java.nio.ByteBuffer src) {
+		throw new UnsupportedOperationException();
+	}
+
 }

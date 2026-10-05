@@ -145,4 +145,12 @@ public interface ReadableBuffer extends Readable {
 		return read(buffer, 0, buffer.length);
 	}
 
+	public default int read(java.nio.ByteBuffer dst) {
+		throw new UnsupportedOperationException();
+	}
+
+	public default java.nio.ByteBuffer asByteBuffer() {
+		throw new UnsupportedOperationException();
+	}
+
 }

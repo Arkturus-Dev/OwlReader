@@ -186,4 +186,44 @@ public class BufferTest {
 		assertEquals("[1:0]", b.location());
 		assertEquals(0, b.position());
 	}
+
+	@Test
+	public void testByteBufferInterop() {
+		Buffer b = new Buffer();
+		java.nio.ByteBuffer src = java.nio.ByteBuffer.wrap(new byte[] { 1, 2, 3, 4, 5 });
+		b.write(src);
+		assertEquals(0, src.remaining());
+
+		java.nio.ByteBuffer view = b.asByteBuffer();
+		assertEquals(5, view.remaining());
+		assertEquals(1, view.get());
+
+		java.nio.ByteBuffer dst = java.nio.ByteBuffer.allocate(3);
+		int read = b.read(dst);
+		assertEquals(3, read);
+		assertEquals(0, dst.remaining());
+		assertArrayEquals(new byte[] { 1, 2, 3 }, dst.array());
+
+		Buffer wrapped = Buffer.wrap(java.nio.ByteBuffer.wrap("wrap-test".getBytes(StandardCharsets.UTF_8)));
+		assertEquals("wrap-test", wrapped.toString());
+	}
+
+	@Test
+	public void testChannelTransfer() throws java.io.IOException {
+		Buffer srcBuffer = new Buffer();
+		srcBuffer.write("Channel payload data");
+
+		java.io.ByteArrayOutputStream baos = new java.io.ByteArrayOutputStream();
+		java.nio.channels.WritableByteChannel writeChannel = java.nio.channels.Channels.newChannel(baos);
+		int written = srcBuffer.writeTo(writeChannel);
+		assertEquals("Channel payload data".length(), written);
+		assertEquals("Channel payload data", baos.toString(StandardCharsets.UTF_8));
+
+		Buffer dstBuffer = new Buffer();
+		java.io.ByteArrayInputStream bais = new java.io.ByteArrayInputStream("Incoming stream".getBytes(StandardCharsets.UTF_8));
+		java.nio.channels.ReadableByteChannel readChannel = java.nio.channels.Channels.newChannel(bais);
+		int read = dstBuffer.readFrom(readChannel);
+		assertEquals("Incoming stream".length(), read);
+		assertEquals("Incoming stream", dstBuffer.toString());
+	}
 }
