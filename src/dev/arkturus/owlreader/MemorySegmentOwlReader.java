@@ -84,6 +84,25 @@ public class MemorySegmentOwlReader extends BaseOwlReader {
 	}
 
 	@Override
+	public int readInt24() throws IOException {
+		return (readUInt24() << 8) >> 8;
+	}
+
+	@Override
+	public int readUInt24() throws IOException {
+		synchronized (readLock) {
+			checkAvailable(3);
+			byte b0 = segment.get(ValueLayout.JAVA_BYTE, position);
+			byte b1 = segment.get(ValueLayout.JAVA_BYTE, position + 1);
+			byte b2 = segment.get(ValueLayout.JAVA_BYTE, position + 2);
+			position += 3;
+			return (getEndian() == Endian.LITTLE)
+					? ((b2 & 0xFF) << 16) | ((b1 & 0xFF) << 8) | (b0 & 0xFF)
+					: ((b0 & 0xFF) << 16) | ((b1 & 0xFF) << 8) | (b2 & 0xFF);
+		}
+	}
+
+	@Override
 	public int readInt() throws IOException {
 		synchronized (readLock) {
 			checkAvailable(4);

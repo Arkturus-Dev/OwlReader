@@ -123,4 +123,19 @@ public class FramedOwlReaderTest {
 		assertEquals((byte) 4, buf.readByte());
 		assertEquals((byte) 5, buf.readByte());
 	}
+
+	@ParameterizedTest
+	@MethodSource("readers")
+	@DisplayName("Framed reader int24 reading")
+	public void testFramedInt24(OwlReaderTestFixtures.ReaderFactory factory) throws Exception {
+		byte[] data = new byte[] { 0x01, 0x02, 0x03, 0x04 };
+		OwlReader parent = factory.create(data);
+
+		OwlReader frame = parent.frame(3);
+		assertEquals(0x010203, frame.readInt24());
+		assertFalse(frame.hasData());
+		frame.close();
+
+		assertEquals((byte) 0x04, parent.readByte());
+	}
 }

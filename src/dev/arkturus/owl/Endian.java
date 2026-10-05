@@ -30,6 +30,38 @@ public enum Endian {
 		}
 	}
 
+	public int readInt24(byte[] data, int off) {
+		return (readUInt24(data, off) << 8) >> 8;
+	}
+
+	public int readUInt24(byte[] data, int off) {
+		switch (this) {
+			case LITTLE:
+				return ((data[off + 2] & 0xFF) << 16) | ((data[off + 1] & 0xFF) << 8) | (data[off] & 0xFF);
+			case BIG:
+				return ((data[off] & 0xFF) << 16) | ((data[off + 1] & 0xFF) << 8) | (data[off + 2] & 0xFF);
+			default:
+				throw new IllegalArgumentException();
+		}
+	}
+
+	public void writeInt24(int i, byte[] buffer, int off) {
+		switch (this) {
+			case LITTLE:
+				buffer[off] = (byte) (i & 0xFF);
+				buffer[off + 1] = (byte) ((i >>> 8) & 0xFF);
+				buffer[off + 2] = (byte) ((i >>> 16) & 0xFF);
+				break;
+			case BIG:
+				buffer[off] = (byte) ((i >>> 16) & 0xFF);
+				buffer[off + 1] = (byte) ((i >>> 8) & 0xFF);
+				buffer[off + 2] = (byte) (i & 0xFF);
+				break;
+			default:
+				throw new IllegalArgumentException();
+		}
+	}
+
 	public int readInt(byte[] data, int off) {
 		switch (this) {
 			case LITTLE:

@@ -77,5 +77,57 @@ public class OwlWriterPrimitivesTest {
 		assertThrows(UnsafeUnsignedException.class, () -> writer.writeSUByte((short) 128));
 		assertThrows(UnsafeUnsignedException.class, () -> writer.writeSUShort(32768));
 		assertThrows(UnsafeUnsignedException.class, () -> writer.writeSUInt(2147483648L));
+		assertThrows(UnsafeUnsignedException.class, () -> writer.writeSUInt24(8388608));
+		assertThrows(UnsafeUnsignedException.class, () -> writer.writeSUMedium(8388608));
+	}
+
+	@ParameterizedTest(name = "{0}")
+	@MethodSource("dev.arkturus.owlreader.test.OwlWriterTestFixtures#allWriters")
+	public void testWriteInt24BigEndian(WriterFactory factory) throws Exception {
+		WriterFixture fixture = factory.create(16, Endian.BIG);
+		OwlWriter writer = fixture.writer();
+
+		writer.writeInt24(0x123456);
+		writer.writeMedium(0x789ABC);
+
+		byte[] data = fixture.toByteArray();
+		assertEquals((byte) 0x12, data[0]);
+		assertEquals((byte) 0x34, data[1]);
+		assertEquals((byte) 0x56, data[2]);
+		assertEquals((byte) 0x78, data[3]);
+		assertEquals((byte) 0x9A, data[4]);
+		assertEquals((byte) 0xBC, data[5]);
+	}
+
+	@ParameterizedTest(name = "{0}")
+	@MethodSource("dev.arkturus.owlreader.test.OwlWriterTestFixtures#allWriters")
+	public void testWriteInt24LittleEndian(WriterFactory factory) throws Exception {
+		WriterFixture fixture = factory.create(16, Endian.LITTLE);
+		OwlWriter writer = fixture.writer();
+
+		writer.writeInt24(0x123456);
+
+		byte[] data = fixture.toByteArray();
+		assertEquals((byte) 0x56, data[0]);
+		assertEquals((byte) 0x34, data[1]);
+		assertEquals((byte) 0x12, data[2]);
+	}
+
+	@ParameterizedTest(name = "{0}")
+	@MethodSource("dev.arkturus.owlreader.test.OwlWriterTestFixtures#allWriters")
+	public void testWriteUInt24(WriterFactory factory) throws Exception {
+		WriterFixture fixture = factory.create(16, Endian.BIG);
+		OwlWriter writer = fixture.writer();
+
+		writer.writeUInt24(16777215);
+		writer.writeUMedium(0x800000);
+
+		byte[] data = fixture.toByteArray();
+		assertEquals((byte) 0xFF, data[0]);
+		assertEquals((byte) 0xFF, data[1]);
+		assertEquals((byte) 0xFF, data[2]);
+		assertEquals((byte) 0x80, data[3]);
+		assertEquals((byte) 0x00, data[4]);
+		assertEquals((byte) 0x00, data[5]);
 	}
 }

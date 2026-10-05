@@ -298,6 +298,22 @@ public class InputStreamOwlReader extends BaseOwlReader {
 		}
 
 		@Override
+		public int readInt24() throws IOException {
+			synchronized (readLock) {
+				advance(3);
+				return InputStreamOwlReader.this.readInt24();
+			}
+		}
+
+		@Override
+		public int readUInt24() throws IOException {
+			synchronized (readLock) {
+				advance(3);
+				return InputStreamOwlReader.this.readUInt24();
+			}
+		}
+
+		@Override
 		public int readInt() throws IOException {
 			synchronized (readLock) {
 				advance(4);

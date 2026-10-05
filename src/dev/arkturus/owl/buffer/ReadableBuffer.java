@@ -73,6 +73,16 @@ public interface ReadableBuffer extends Readable {
 	}
 
 	@Override
+	public default int readInt24() {
+		return getEndian().readInt24(read(3), 0);
+	}
+
+	@Override
+	public default int readMedium() {
+		return readInt24();
+	}
+
+	@Override
 	public default int readInt() {
 		return getEndian().readInt(read(4), 0);
 	}
@@ -116,6 +126,40 @@ public interface ReadableBuffer extends Readable {
 		if (s < 0)
 			throw new UnsafeUnsignedException(short.class);
 		return s;
+	}
+
+	@Override
+	public default int readUInt24() {
+		return getEndian().readUInt24(read(3), 0);
+	}
+
+	@Override
+	public default int readUMedium() {
+		return readUInt24();
+	}
+
+	@Override
+	public default int readUnsignedInt24() {
+		return readUInt24();
+	}
+
+	@Override
+	public default int readUnsignedMedium() {
+		return readUInt24();
+	}
+
+	@Override
+	public default int readSUInt24() {
+		int i = readInt24();
+		if (i < 0) {
+			throw new UnsafeUnsignedException(int.class);
+		}
+		return i;
+	}
+
+	@Override
+	public default int readSUMedium() {
+		return readSUInt24();
 	}
 
 	@Override

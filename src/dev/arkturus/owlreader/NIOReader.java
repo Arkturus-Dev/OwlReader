@@ -72,6 +72,26 @@ public class NIOReader extends BaseOwlReader {
 	}
 
 	@Override
+	public int readInt24() throws IOException {
+		return (readUInt24() << 8) >> 8;
+	}
+
+	@Override
+	public int readUInt24() throws IOException {
+		synchronized (readLock) {
+			if (buffer.remaining() < 3) {
+				throw new EOFException("Unexpected EOF.");
+			}
+			byte b0 = buffer.get();
+			byte b1 = buffer.get();
+			byte b2 = buffer.get();
+			return (getEndian() == Endian.LITTLE)
+					? ((b2 & 0xFF) << 16) | ((b1 & 0xFF) << 8) | (b0 & 0xFF)
+					: ((b0 & 0xFF) << 16) | ((b1 & 0xFF) << 8) | (b2 & 0xFF);
+		}
+	}
+
+	@Override
 	public int readInt() throws IOException {
 		synchronized (readLock) {
 			try {
