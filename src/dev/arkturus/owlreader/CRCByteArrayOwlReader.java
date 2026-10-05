@@ -158,6 +158,16 @@ public class CRCByteArrayOwlReader extends BaseOwlReader implements CRCReader {
 		}
 	}
 
+	/**
+	 * Creates a detached zero-copy sub-reader containing the next <code>sliceLength</code> bytes,
+	 * wrapping it in a new {@link CRCByteArrayOwlReader} with its own isolated CRC checksum.
+	 *
+	 * @param sliceLength number of bytes to slice.
+	 * @return a detached {@link CRCByteArrayOwlReader} over the sliced bytes.
+	 * @throws IndexOutOfBoundsException if <code>sliceLength &lt; 0</code>.
+	 * @throws EOFException if fewer than <code>sliceLength</code> bytes remain.
+	 * @throws IOException if an I/O error occurs.
+	 */
 	@Override
 	public OwlReader slice(int sliceLength) throws IOException {
 		synchronized (reader.readLock) {
@@ -169,6 +179,16 @@ public class CRCByteArrayOwlReader extends BaseOwlReader implements CRCReader {
 		}
 	}
 
+	/**
+	 * Creates a detached zero-copy sub-reader containing <code>sliceLength</code> bytes starting at the specified
+	 * absolute byte index <code>sliceOffset</code>, wrapped in a new {@link CRCByteArrayOwlReader} with its own isolated CRC.
+	 *
+	 * @param sliceOffset absolute offset within the underlying reader window.
+	 * @param sliceLength number of bytes in the slice.
+	 * @return a detached {@link CRCByteArrayOwlReader} over the specified range.
+	 * @throws IndexOutOfBoundsException if bounds are invalid.
+	 * @throws IOException if an I/O error occurs.
+	 */
 	@Override
 	public OwlReader slice(int sliceOffset, int sliceLength) throws IOException {
 		synchronized (reader.readLock) {
@@ -180,6 +200,15 @@ public class CRCByteArrayOwlReader extends BaseOwlReader implements CRCReader {
 		}
 	}
 
+	/**
+	 * Creates a sequential bounded viewing window of size <code>frameLength</code> bytes.
+	 * Reading from the framed reader accumulates CRC into this reader's checksum.
+	 *
+	 * @param frameLength number of bytes in the framed window.
+	 * @return a framed {@link OwlReader}.
+	 * @throws IndexOutOfBoundsException if <code>frameLength &lt; 0</code>.
+	 * @throws IllegalArgumentException if <code>frameLength</code> exceeds available remaining bytes.
+	 */
 	@Override
 	public OwlReader frame(int frameLength) {
 		synchronized (reader.readLock) {

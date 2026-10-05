@@ -595,6 +595,18 @@ public class Buffer implements ReadableBuffer, WritableBuffer {
 
 	}
 
+	/**
+	 * Creates a detached, concurrent-safe zero-copy {@link OwlReader} containing the next <code>sliceLength</code>
+	 * readable bytes starting from the current {@code readIndex}.
+	 * <p>
+	 * The buffer's {@code readIndex} is immediately advanced by <code>sliceLength</code>. Slicing shares the
+	 * underlying byte array directly without copying.
+	 *
+	 * @param sliceLength number of bytes to slice. Must be non-negative and &lt;= readable bytes.
+	 * @return a zero-copy {@link ByteArrayOwlReader} spanning the sliced range.
+	 * @throws IndexOutOfBoundsException if <code>sliceLength &lt; 0</code>.
+	 * @throws UncheckedIOException if fewer than <code>sliceLength</code> readable bytes remain.
+	 */
 	@Override
 	public OwlReader slice(int sliceLength) {
 		if (sliceLength < 0) {
@@ -609,6 +621,18 @@ public class Buffer implements ReadableBuffer, WritableBuffer {
 		return new ByteArrayOwlReader(buffer, sliceOffset, sliceLength, endian);
 	}
 
+	/**
+	 * Creates a detached, concurrent-safe zero-copy {@link OwlReader} containing <code>sliceLength</code> bytes
+	 * starting at the specified absolute byte index <code>sliceOffset</code> within this buffer.
+	 * <p>
+	 * The buffer's current {@code readIndex} and {@code writeIndex} are completely untouched.
+	 *
+	 * @param sliceOffset absolute starting byte index within this buffer. Must be non-negative.
+	 * @param sliceLength number of bytes in the slice. Must be non-negative.
+	 * @return a zero-copy {@link ByteArrayOwlReader} spanning the sliced range.
+	 * @throws IndexOutOfBoundsException if <code>sliceOffset &lt; 0</code>, <code>sliceLength &lt; 0</code>, or
+	 *                                   <code>sliceOffset + sliceLength &gt; writeIndex</code>.
+	 */
 	@Override
 	public OwlReader slice(int sliceOffset, int sliceLength) {
 		if (sliceOffset < 0 || sliceLength < 0 || sliceOffset + sliceLength > writeIndex) {
@@ -617,6 +641,18 @@ public class Buffer implements ReadableBuffer, WritableBuffer {
 		return new ByteArrayOwlReader(buffer, sliceOffset, sliceLength, endian);
 	}
 
+	/**
+	 * Creates a sequential bounded viewing window of size <code>frameLength</code> bytes starting from the current
+	 * {@code readIndex}.
+	 * <p>
+	 * Reading from the framed reader advances this buffer's {@code readIndex}. Closing the framed reader
+	 * automatically skips any unconsumed bytes remaining in the frame window.
+	 *
+	 * @param frameLength number of bytes in the framed window. Must be non-negative and &lt;= readable bytes.
+	 * @return an {@link OwlReader} scoped to read at most <code>frameLength</code> bytes.
+	 * @throws IndexOutOfBoundsException if <code>frameLength &lt; 0</code>.
+	 * @throws IllegalArgumentException if <code>frameLength</code> exceeds available readable bytes.
+	 */
 	@Override
 	public OwlReader frame(int frameLength) {
 		return reader().frame(frameLength);
