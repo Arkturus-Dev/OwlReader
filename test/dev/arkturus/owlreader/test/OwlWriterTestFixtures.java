@@ -10,8 +10,14 @@ import dev.arkturus.owlwriter.OwlWriter;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.lang.foreign.Arena;
+import java.lang.foreign.MemorySegment;
+import java.nio.ByteBuffer;
 import java.util.Arrays;
 import java.util.stream.Stream;
+
+import dev.arkturus.owlwriter.MemorySegmentOwlWriter;
+import dev.arkturus.owlwriter.NIOWriter;
 
 public final class OwlWriterTestFixtures {
 
@@ -94,6 +100,68 @@ public final class OwlWriterTestFixtures {
 					public byte[] toByteArray() throws IOException {
 						frame.close();
 						return baos.toByteArray();
+					}
+				};
+			}),
+			Named.of("NIOWriter(Heap)", (capacity, endian) -> {
+				ByteBuffer bb = ByteBuffer.allocate(capacity);
+				NIOWriter writer = new NIOWriter(bb, endian);
+				return new WriterFixture() {
+					@Override
+					public OwlWriter writer() {
+						return writer;
+					}
+
+					@Override
+					public byte[] toByteArray() {
+						return writer.toByteArray();
+					}
+				};
+			}),
+			Named.of("NIOWriter(Direct)", (capacity, endian) -> {
+				ByteBuffer bb = ByteBuffer.allocateDirect(capacity);
+				NIOWriter writer = new NIOWriter(bb, endian);
+				return new WriterFixture() {
+					@Override
+					public OwlWriter writer() {
+						return writer;
+					}
+
+					@Override
+					public byte[] toByteArray() {
+						return writer.toByteArray();
+					}
+				};
+			}),
+			Named.of("MemorySegmentOwlWriter(Heap)", (capacity, endian) -> {
+				byte[] arr = new byte[capacity];
+				MemorySegment seg = MemorySegment.ofArray(arr);
+				MemorySegmentOwlWriter writer = new MemorySegmentOwlWriter(seg, endian);
+				return new WriterFixture() {
+					@Override
+					public OwlWriter writer() {
+						return writer;
+					}
+
+					@Override
+					public byte[] toByteArray() {
+						return writer.toByteArray();
+					}
+				};
+			}),
+			Named.of("MemorySegmentOwlWriter(Native)", (capacity, endian) -> {
+				Arena arena = Arena.ofAuto();
+				MemorySegment seg = arena.allocate(capacity);
+				MemorySegmentOwlWriter writer = new MemorySegmentOwlWriter(seg, endian);
+				return new WriterFixture() {
+					@Override
+					public OwlWriter writer() {
+						return writer;
+					}
+
+					@Override
+					public byte[] toByteArray() {
+						return writer.toByteArray();
 					}
 				};
 			})
