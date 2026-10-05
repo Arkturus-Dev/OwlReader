@@ -5,6 +5,7 @@ import java.io.IOException;
 
 import dev.arkturus.owl.Endian;
 import dev.arkturus.owl.UnsafeUnsignedException;
+import dev.arkturus.owl.VarInt;
 
 public interface Readable {
 
@@ -64,6 +65,94 @@ public interface Readable {
 	 */
 	public default double readDouble() throws IOException {
 		return Double.longBitsToDouble(readLong());
+	}
+
+	/**
+	 * Reads a variable-length 32-bit integer (VarInt) using 7-bit continuation chunks.
+	 * <p>
+	 * <b>Security Safeguard:</b> To protect against unbounded memory consumption and denial-of-service
+	 * from corrupt streams with endless continuation bits, this method enforces a strict 5-byte limit.
+	 * If more than 5 bytes are encountered with the continuation bit set, an {@link IOException} is thrown.
+	 *
+	 * @return the decoded integer.
+	 * @throws IOException if an I/O error occurs, premature EOF is hit, or the VarInt exceeds 5 bytes.
+	 */
+	public default int readVarInt() throws IOException {
+		int result = 0;
+		int shift = 0;
+		while (shift < 35) {
+			byte b = readByte();
+			result |= (b & 0x7F) << shift;
+			if ((b & 0x80) == 0) {
+				return result;
+			}
+			shift += 7;
+		}
+		throw new IOException("Malformed VarInt: exceeds 5 bytes");
+	}
+
+	/**
+	 * Reads a variable-length 64-bit long (VarLong) using 7-bit continuation chunks.
+	 * <p>
+	 * <b>Security Safeguard:</b> To protect against unbounded memory consumption and denial-of-service
+	 * from corrupt streams with endless continuation bits, this method enforces a strict 10-byte limit.
+	 * If more than 10 bytes are encountered with the continuation bit set, an {@link IOException} is thrown.
+	 *
+	 * @return the decoded long.
+	 * @throws IOException if an I/O error occurs, premature EOF is hit, or the VarLong exceeds 10 bytes.
+	 */
+	public default long readVarLong() throws IOException {
+		long result = 0;
+		int shift = 0;
+		while (shift < 70) {
+			byte b = readByte();
+			result |= ((long) (b & 0x7F)) << shift;
+			if ((b & 0x80) == 0) {
+				return result;
+			}
+			shift += 7;
+		}
+		throw new IOException("Malformed VarLong: exceeds 10 bytes");
+	}
+
+	/**
+	 * Reads a ZigZag-encoded 32-bit signed integer.
+	 *
+	 * @return the decoded signed integer.
+	 * @throws IOException if an I/O error occurs or the VarInt is malformed.
+	 */
+	public default int readSignedVarInt() throws IOException {
+		return VarInt.decodeZigZag32(readVarInt());
+	}
+
+	/**
+	 * Reads a ZigZag-encoded 32-bit signed integer. Alias for {@link #readSignedVarInt()}.
+	 *
+	 * @return the decoded signed integer.
+	 * @throws IOException if an I/O error occurs or the VarInt is malformed.
+	 */
+	public default int readZigZagVarInt() throws IOException {
+		return readSignedVarInt();
+	}
+
+	/**
+	 * Reads a ZigZag-encoded 64-bit signed long.
+	 *
+	 * @return the decoded signed long.
+	 * @throws IOException if an I/O error occurs or the VarLong is malformed.
+	 */
+	public default long readSignedVarLong() throws IOException {
+		return VarInt.decodeZigZag64(readVarLong());
+	}
+
+	/**
+	 * Reads a ZigZag-encoded 64-bit signed long. Alias for {@link #readSignedVarLong()}.
+	 *
+	 * @return the decoded signed long.
+	 * @throws IOException if an I/O error occurs or the VarLong is malformed.
+	 */
+	public default long readZigZagVarLong() throws IOException {
+		return readSignedVarLong();
 	}
 
 	/**

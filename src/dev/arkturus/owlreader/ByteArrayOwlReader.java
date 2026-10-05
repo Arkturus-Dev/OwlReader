@@ -106,6 +106,46 @@ public class ByteArrayOwlReader extends BaseOwlReader {
 	}
 
 	@Override
+	public int readVarInt() throws IOException {
+		synchronized (readLock) {
+			int result = 0;
+			int shift = 0;
+			while (shift < 35) {
+				if (position >= length) {
+					throw new EOFException("Unexpected EOF while reading VarInt.");
+				}
+				byte b = in[offset + position++];
+				result |= (b & 0x7F) << shift;
+				if ((b & 0x80) == 0) {
+					return result;
+				}
+				shift += 7;
+			}
+			throw new IOException("Malformed VarInt: exceeds 5 bytes");
+		}
+	}
+
+	@Override
+	public long readVarLong() throws IOException {
+		synchronized (readLock) {
+			long result = 0;
+			int shift = 0;
+			while (shift < 70) {
+				if (position >= length) {
+					throw new EOFException("Unexpected EOF while reading VarLong.");
+				}
+				byte b = in[offset + position++];
+				result |= ((long) (b & 0x7F)) << shift;
+				if ((b & 0x80) == 0) {
+					return result;
+				}
+				shift += 7;
+			}
+			throw new IOException("Malformed VarLong: exceeds 10 bytes");
+		}
+	}
+
+	@Override
 	public int read(byte[] buffer, int off, int len) throws IOException {
 		Objects.checkFromIndexSize(off, len, buffer.length);
 		synchronized (readLock) {

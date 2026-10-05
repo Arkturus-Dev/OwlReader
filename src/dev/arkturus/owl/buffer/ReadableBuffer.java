@@ -1,6 +1,10 @@
 package dev.arkturus.owl.buffer;
 
+import java.io.IOException;
+import java.io.UncheckedIOException;
+
 import dev.arkturus.owl.UnsafeUnsignedException;
+import dev.arkturus.owl.VarInt;
 import dev.arkturus.owlreader.OwlReader;
 import dev.arkturus.owlreader.Readable;
 
@@ -138,6 +142,56 @@ public interface ReadableBuffer extends Readable {
 	@Override
 	public default byte readByte() {
 		return read();
+	}
+
+	@Override
+	public default int readVarInt() {
+		int result = 0;
+		int shift = 0;
+		while (shift < 35) {
+			byte b = readByte();
+			result |= (b & 0x7F) << shift;
+			if ((b & 0x80) == 0) {
+				return result;
+			}
+			shift += 7;
+		}
+		throw new UncheckedIOException(new IOException("Malformed VarInt: exceeds 5 bytes"));
+	}
+
+	@Override
+	public default long readVarLong() {
+		long result = 0;
+		int shift = 0;
+		while (shift < 70) {
+			byte b = readByte();
+			result |= ((long) (b & 0x7F)) << shift;
+			if ((b & 0x80) == 0) {
+				return result;
+			}
+			shift += 7;
+		}
+		throw new UncheckedIOException(new IOException("Malformed VarLong: exceeds 10 bytes"));
+	}
+
+	@Override
+	public default int readSignedVarInt() {
+		return VarInt.decodeZigZag32(readVarInt());
+	}
+
+	@Override
+	public default int readZigZagVarInt() {
+		return readSignedVarInt();
+	}
+
+	@Override
+	public default long readSignedVarLong() {
+		return VarInt.decodeZigZag64(readVarLong());
+	}
+
+	@Override
+	public default long readZigZagVarLong() {
+		return readSignedVarLong();
 	}
 
 	@Override
