@@ -226,4 +226,25 @@ public class BufferTest {
 		assertEquals("Incoming stream".length(), read);
 		assertEquals("Incoming stream", dstBuffer.toString());
 	}
+
+	@Test
+	public void testBufferVarIntOperations() {
+		Buffer buffer = new Buffer();
+		buffer.writeVarInt(300)
+			.writeSignedVarInt(-42)
+			.writeVarLong(123456789012345L)
+			.writeSignedVarLong(-9876543210L);
+
+		assertEquals(300, buffer.readVarInt());
+		assertEquals(-42, buffer.readSignedVarInt());
+		assertEquals(123456789012345L, buffer.readVarLong());
+		assertEquals(-9876543210L, buffer.readSignedVarLong());
+	}
+
+	@Test
+	public void testBufferMalformedVarIntThrowsUncheckedIOException() {
+		Buffer buffer = new Buffer();
+		buffer.write(new byte[] { (byte) 0x80, (byte) 0x80, (byte) 0x80, (byte) 0x80, (byte) 0x80, (byte) 0x80 });
+		assertThrows(java.io.UncheckedIOException.class, () -> buffer.readVarInt());
+	}
 }

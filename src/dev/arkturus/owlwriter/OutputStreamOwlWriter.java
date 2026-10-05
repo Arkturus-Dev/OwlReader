@@ -46,6 +46,16 @@ public class OutputStreamOwlWriter extends BaseOwlWriter {
 	}
 
 	@Override
+	public synchronized void writeVarInt(int value) throws IOException {
+		super.writeVarInt(value);
+	}
+
+	@Override
+	public synchronized void writeVarLong(long value) throws IOException {
+		super.writeVarLong(value);
+	}
+
+	@Override
 	public synchronized void write(byte[] bytes, int off, int len) throws IOException {
 		Objects.checkFromIndexSize(off, len, bytes.length);
 		out.write(bytes, off, len);
@@ -112,6 +122,20 @@ public class OutputStreamOwlWriter extends BaseOwlWriter {
 		public synchronized void writeLong(long l) throws IOException {
 			advance(8);
 			OutputStreamOwlWriter.this.writeLong(l);
+		}
+
+		@Override
+		public synchronized void writeVarInt(int value) throws IOException {
+			synchronized (OutputStreamOwlWriter.this) {
+				super.writeVarInt(value);
+			}
+		}
+
+		@Override
+		public synchronized void writeVarLong(long value) throws IOException {
+			synchronized (OutputStreamOwlWriter.this) {
+				super.writeVarLong(value);
+			}
 		}
 
 		@Override

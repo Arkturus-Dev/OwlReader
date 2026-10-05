@@ -5,6 +5,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.function.Function;
 
 import dev.arkturus.nullanalysis.annotations.Nullable;
+import dev.arkturus.owl.VarInt;
 import dev.arkturus.owlwriter.OwlWriter;
 
 public interface WritableBuffer {
@@ -165,6 +166,74 @@ public interface WritableBuffer {
 	public WritableBuffer writeBytes(int i);
 
 	public WritableBuffer writeBytes(long l);
+
+	/**
+	 * Writes a variable-length 32-bit integer (VarInt) using 7-bit continuation chunks.
+	 *
+	 * @param value the integer value to write.
+	 * @return this buffer.
+	 */
+	public default WritableBuffer writeVarInt(int value) {
+		while ((value & ~0x7F) != 0) {
+			write((byte) ((value & 0x7F) | 0x80));
+			value >>>= 7;
+		}
+		return write((byte) (value & 0x7F));
+	}
+
+	/**
+	 * Writes a variable-length 64-bit long (VarLong) using 7-bit continuation chunks.
+	 *
+	 * @param value the long value to write.
+	 * @return this buffer.
+	 */
+	public default WritableBuffer writeVarLong(long value) {
+		while ((value & ~0x7FL) != 0) {
+			write((byte) (((int) value & 0x7F) | 0x80));
+			value >>>= 7;
+		}
+		return write((byte) ((int) value & 0x7F));
+	}
+
+	/**
+	 * Writes a 32-bit signed integer using ZigZag and VarInt encoding.
+	 *
+	 * @param value the signed integer to write.
+	 * @return this buffer.
+	 */
+	public default WritableBuffer writeSignedVarInt(int value) {
+		return writeVarInt(VarInt.encodeZigZag32(value));
+	}
+
+	/**
+	 * Writes a 32-bit signed integer using ZigZag and VarInt encoding. Alias for {@link #writeSignedVarInt(int)}.
+	 *
+	 * @param value the signed integer to write.
+	 * @return this buffer.
+	 */
+	public default WritableBuffer writeZigZagVarInt(int value) {
+		return writeSignedVarInt(value);
+	}
+
+	/**
+	 * Writes a 64-bit signed long using ZigZag and VarLong encoding.
+	 *
+	 * @param value the signed long to write.
+	 * @return this buffer.
+	 */
+	public default WritableBuffer writeSignedVarLong(long value) {
+		return writeVarLong(VarInt.encodeZigZag64(value));
+	}
+
+	/**
+	 * Writes a 64-bit signed long using ZigZag and VarLong encoding. Alias for {@link #writeSignedVarLong(long)}.
+	 *
+	 * @param value the signed long to write.
+	 * @return this buffer.
+	 */
+	public default WritableBuffer writeZigZagVarLong(long value) {
+		return writeSignedVarLong(value);
+	}
 
 	public OwlWriter writer();
 

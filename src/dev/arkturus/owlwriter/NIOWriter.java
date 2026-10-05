@@ -104,6 +104,38 @@ public class NIOWriter extends BaseOwlWriter {
 	}
 
 	@Override
+	public void writeVarInt(int value) throws IOException {
+		synchronized (writeLock) {
+			try {
+				while ((value & ~0x7F) != 0) {
+					buffer.put((byte) ((value & 0x7F) | 0x80));
+					value >>>= 7;
+				}
+				buffer.put((byte) (value & 0x7F));
+			} catch (BufferOverflowException e) {
+				buffer.position(buffer.limit());
+				throw new EOFException("End of buffer reached while writing VarInt.");
+			}
+		}
+	}
+
+	@Override
+	public void writeVarLong(long value) throws IOException {
+		synchronized (writeLock) {
+			try {
+				while ((value & ~0x7FL) != 0) {
+					buffer.put((byte) (((int) value & 0x7F) | 0x80));
+					value >>>= 7;
+				}
+				buffer.put((byte) ((int) value & 0x7F));
+			} catch (BufferOverflowException e) {
+				buffer.position(buffer.limit());
+				throw new EOFException("End of buffer reached while writing VarLong.");
+			}
+		}
+	}
+
+	@Override
 	public void writeFloat(float f) throws IOException {
 		synchronized (writeLock) {
 			try {
