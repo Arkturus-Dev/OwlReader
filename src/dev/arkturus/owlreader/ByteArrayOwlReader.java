@@ -27,10 +27,29 @@ public class ByteArrayOwlReader extends BaseOwlReader {
 		this(in, 0, in.length, endian);
 	}
 
+	/**
+	 * Creates a {@link ByteArrayOwlReader} spanning a sub-range of the provided byte array with big-endian byte order.
+	 *
+	 * @param in the backing byte array.
+	 * @param offset the starting index within the array.
+	 * @param length the number of bytes to read.
+	 * @throws NullPointerException if <code>in</code> is null.
+	 * @throws IndexOutOfBoundsException if <code>offset</code> or <code>length</code> are invalid for <code>in</code>.
+	 */
 	public ByteArrayOwlReader(byte[] in, int offset, int length) {
 		this(in, offset, length, Endian.BIG);
 	}
 
+	/**
+	 * Creates a {@link ByteArrayOwlReader} spanning a sub-range of the provided byte array with the specified byte order.
+	 *
+	 * @param in the backing byte array.
+	 * @param offset the starting index within the array.
+	 * @param length the number of bytes to read.
+	 * @param endian the endianness to use for multi-byte primitives.
+	 * @throws NullPointerException if <code>in</code> is null.
+	 * @throws IndexOutOfBoundsException if <code>offset</code> or <code>length</code> are invalid for <code>in</code>.
+	 */
 	public ByteArrayOwlReader(byte[] in, int offset, int length, Endian endian) {
 		Objects.requireNonNull(in);
 		Objects.checkFromIndexSize(offset, length, in.length);
@@ -193,6 +212,18 @@ public class ByteArrayOwlReader extends BaseOwlReader {
 		}
 	}
 
+	/**
+	 * Creates a detached, concurrent-safe zero-copy {@link OwlReader} containing the next <code>sliceLength</code>
+	 * bytes starting from the current {@link #position()}.
+	 * <p>
+	 * <b>Zero-Copy:</b> Shares the underlying byte array directly at {@code offset + position} without copying.
+	 * The parent reader's {@link #position()} is immediately advanced by <code>sliceLength</code>.
+	 *
+	 * @param sliceLength number of bytes to slice.
+	 * @return a zero-copy {@link ByteArrayOwlReader} spanning the sliced range.
+	 * @throws IndexOutOfBoundsException if <code>sliceLength &lt; 0</code>.
+	 * @throws EOFException if fewer than <code>sliceLength</code> bytes remain in this reader window.
+	 */
 	@Override
 	public OwlReader slice(int sliceLength) throws IOException {
 		if (sliceLength < 0)
@@ -207,6 +238,18 @@ public class ByteArrayOwlReader extends BaseOwlReader {
 		}
 	}
 
+	/**
+	 * Creates a detached, concurrent-safe zero-copy {@link OwlReader} containing <code>sliceLength</code> bytes
+	 * starting at the specified absolute byte index <code>sliceOffset</code> within this reader window.
+	 * <p>
+	 * <b>Untouched Cursor:</b> This reader's current {@link #position()} is completely unmodified.
+	 *
+	 * @param sliceOffset relative offset within this reader window (relative to this reader's base offset).
+	 * @param sliceLength number of bytes in the slice.
+	 * @return a zero-copy {@link ByteArrayOwlReader} spanning the specified sub-window.
+	 * @throws IndexOutOfBoundsException if <code>sliceOffset &lt; 0</code>, <code>sliceLength &lt; 0</code>, or
+	 *                                   <code>sliceOffset + sliceLength &gt; length</code>.
+	 */
 	@Override
 	public OwlReader slice(int sliceOffset, int sliceLength) throws IOException {
 		if (sliceOffset < 0 || sliceLength < 0 || sliceOffset + sliceLength > length) {
@@ -217,6 +260,18 @@ public class ByteArrayOwlReader extends BaseOwlReader {
 		}
 	}
 
+	/**
+	 * Creates a sequential bounded viewing window of size <code>frameLength</code> bytes starting from the current
+	 * {@link #position()}.
+	 * <p>
+	 * Reading from the framed reader advances this reader's {@link #position()}. Closing the framed reader
+	 * automatically skips any unconsumed bytes remaining in the frame window.
+	 *
+	 * @param frameLength number of bytes in the framed window. Must be non-negative and &lt;= remaining bytes.
+	 * @return an {@link OwlReader} scoped to read at most <code>frameLength</code> bytes.
+	 * @throws IndexOutOfBoundsException if <code>frameLength &lt; 0</code>.
+	 * @throws IllegalArgumentException if <code>frameLength</code> exceeds available remaining bytes.
+	 */
 	@Override
 	public OwlReader frame(int frameLength) {
 		if (frameLength < 0)

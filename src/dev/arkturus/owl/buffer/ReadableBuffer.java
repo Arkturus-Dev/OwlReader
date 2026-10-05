@@ -153,14 +153,63 @@ public interface ReadableBuffer extends Readable {
 		throw new UnsupportedOperationException();
 	}
 
+	/**
+	 * Creates a detached, concurrent-safe {@link OwlReader} containing the next <code>length</code> readable bytes
+	 * starting from the current read position.
+	 * <p>
+	 * <b>Semantics:</b>
+	 * <ul>
+	 *   <li><b>Read Index Advancement:</b> The buffer's read position is immediately advanced by <code>length</code> bytes.</li>
+	 *   <li><b>Zero-Copy:</b> Shares the underlying storage directly without allocating duplicate arrays or copying data.</li>
+	 *   <li><b>Independent Cursor:</b> The returned reader has its own isolated position cursor, and closing it has no effect on this buffer.</li>
+	 * </ul>
+	 *
+	 * @param length the number of bytes to slice. Must be non-negative and &lt;= readable bytes.
+	 * @return an independent {@link OwlReader} view over the sliced bytes.
+	 * @throws IndexOutOfBoundsException if <code>length &lt; 0</code>.
+	 * @throws java.io.UncheckedIOException if fewer than <code>length</code> bytes are available.
+	 */
 	public default OwlReader slice(int length) {
 		throw new UnsupportedOperationException();
 	}
 
+	/**
+	 * Creates a detached, concurrent-safe {@link OwlReader} containing <code>length</code> bytes starting at the specified
+	 * absolute <code>offset</code> within this buffer.
+	 * <p>
+	 * <b>Semantics:</b>
+	 * <ul>
+	 *   <li><b>Untouched Read Index:</b> The buffer's current read and write indices are completely unaffected.</li>
+	 *   <li><b>Zero-Copy:</b> Shares the underlying storage directly without copying data.</li>
+	 *   <li><b>Independent Cursor:</b> The returned reader has its own isolated position cursor starting at 0.</li>
+	 * </ul>
+	 *
+	 * @param offset the absolute byte offset within this buffer.
+	 * @param length the number of bytes to slice.
+	 * @return an independent {@link OwlReader} view over the specified slice.
+	 * @throws IndexOutOfBoundsException if <code>offset &lt; 0</code>, <code>length &lt; 0</code>, or
+	 *                                   <code>offset + length</code> exceeds the buffer bounds.
+	 */
 	public default OwlReader slice(int offset, int length) {
 		throw new UnsupportedOperationException();
 	}
 
+	/**
+	 * Creates a sequential bounded viewing window of size <code>length</code> bytes starting from the current read position.
+	 * <p>
+	 * <b>Semantics:</b>
+	 * <ul>
+	 *   <li><b>Lockstep Cursor:</b> Reading through the framed reader advances this buffer's read position.</li>
+	 *   <li><b>Auto-Alignment on Close:</b> Closing the framed reader automatically skips any unread frame bytes, aligning
+	 *       this buffer's read position to the end of the frame window.</li>
+	 *   <li><b>Boundary Enforcement:</b> Reading past <code>length</code> bytes throws {@link java.io.EOFException}.</li>
+	 * </ul>
+	 *
+	 * @param length the number of bytes in the framed window. Must be non-negative.
+	 * @return an {@link OwlReader} scoped to read at most <code>length</code> bytes.
+	 * @throws IndexOutOfBoundsException if <code>length &lt; 0</code>.
+	 * @throws IllegalArgumentException if <code>length</code> exceeds available readable bytes.
+	 */
 	public default OwlReader frame(int length) {
 		throw new UnsupportedOperationException();
 	}

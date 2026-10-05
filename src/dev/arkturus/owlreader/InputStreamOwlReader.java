@@ -214,6 +214,20 @@ public class InputStreamOwlReader extends BaseOwlReader {
 		}
 	}
 
+	/**
+	 * Creates a sequential bounded viewing window of size <code>length</code> bytes starting from the current stream position.
+	 * <p>
+	 * Reading from the framed reader reads bytes from the underlying input stream in lockstep.
+	 * When the framed reader is closed, any remaining unconsumed bytes within the frame window are skipped
+	 * on the stream via {@link #skipBytes(long)}.
+	 * <p>
+	 * Note: Because an arbitrary {@link java.io.InputStream} does not expose its total length in advance,
+	 * length validation against total remaining stream bytes cannot be checked at creation time.
+	 *
+	 * @param length number of bytes in the framed window. Must be non-negative.
+	 * @return an {@link OwlReader} scoped to read at most <code>length</code> bytes.
+	 * @throws IndexOutOfBoundsException if <code>length &lt; 0</code>.
+	 */
 	@Override
 	public OwlReader frame(int length) {
 		if (length < 0) {
@@ -222,6 +236,23 @@ public class InputStreamOwlReader extends BaseOwlReader {
 		return new FramedInputStreamOwlReader(length);
 	}
 
+	/**
+	 * Creates a detached, concurrent-safe sub-reader containing the next <code>sliceLength</code> bytes from this stream.
+	 * <p>
+	 * <b>Eager Buffering Semantics:</b>
+	 * Because streams are forward-only and cannot be seeked or concurrently sliced at zero-copy without deadlock,
+	 * this method eagerly reads and buffers the requested <code>sliceLength</code> bytes from this stream into a
+	 * newly allocated {@link ByteArrayOwlReader}.
+	 * <p>
+	 * This parent stream's position is immediately advanced by <code>sliceLength</code> bytes, and subsequent operations
+	 * on the returned reader are fully isolated and thread-safe.
+	 *
+	 * @param sliceLength number of bytes to slice and buffer.
+	 * @return a detached {@link ByteArrayOwlReader} containing the sliced bytes.
+	 * @throws IndexOutOfBoundsException if <code>sliceLength &lt; 0</code>.
+	 * @throws EOFException if the stream terminates before <code>sliceLength</code> bytes can be read.
+	 * @throws IOException if an I/O error occurs while reading from the stream.
+	 */
 	@Override
 	public OwlReader slice(int sliceLength) throws IOException {
 		if (sliceLength < 0) {

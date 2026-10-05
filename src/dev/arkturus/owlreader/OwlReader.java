@@ -447,28 +447,56 @@ public interface OwlReader extends Closeable, Readable {
 	public int position();
 
 	/**
-	 * Creates a OwlReader that may be used to read <code>length</code> bytes, starting from {@link #position()}. If
-	 * more bytes are read, OwlReader will throw an {@link EOFException}. <br>
-	 * <br>
-	 * The produced reader should be read and closed before continuing to read from the original reader. Otherwise
-	 * undefined behavior may occur.
+	 * Creates a sequential bounded viewing window of size <code>length</code> bytes over this reader starting from
+	 * {@link #position()}.
+	 * <p>
+	 * <b>Framing Semantics:</b>
+	 * <ul>
+	 *   <li><b>Synchronized Cursor:</b> Reading from the returned frame reader advances the parent reader's cursor in lockstep.</li>
+	 *   <li><b>Auto-Alignment on Close:</b> When {@link #close()} is called on the framed reader, any unconsumed bytes remaining
+	 *       in the frame window are automatically skipped on the parent reader, aligning the parent reader's cursor to the end
+	 *       of the frame (i.e. {@code initialPosition + length}).</li>
+	 *   <li><b>Boundary Enforcement:</b> Attempting to read beyond {@code length} bytes through the framed reader results in an
+	 *       {@link EOFException}, preventing overruns into subsequent frames or payload boundaries.</li>
+	 *   <li><b>Usage Pattern:</b> Ideal for sequential parsing of framed network packets, TLV (Type-Length-Value) records, and
+	 *       length-prefixed protocol blocks where payloads are consumed sequentially and clean alignment is required even if fields
+	 *       are skipped.</li>
+	 * </ul>
 	 *
-	 * @param length number of bytes the reader should be able to read.
-	 * @return an OwlReader scoped to read <code>length</code> bytes of data.
+	 * @param length number of bytes in the framed window. Must be non-negative.
+	 * @return an {@link OwlReader} scoped to read at most <code>length</code> bytes.
+	 * @throws IndexOutOfBoundsException if <code>length &lt; 0</code>.
+	 * @throws IllegalArgumentException if <code>length</code> exceeds the available data on bounded readers.
 	 */
 	public default OwlReader frame(int length) {
 		throw new UnsupportedOperationException();
 	}
 
 	/**
-	 * Creates a detached, independent {@link OwlReader} containing the next <code>length</code> bytes starting from
-	 * {@link #position()}. The parent reader's position is immediately advanced by <code>length</code> bytes.
-	 * Reading from the slice has no side-effects on the parent reader, and closing the slice does not affect the
-	 * parent reader.
+	 * Creates a detached, concurrent-safe sub-reader containing the next <code>length</code> bytes starting from
+	 * {@link #position()}.
+	 * <p>
+	 * <b>Slicing Semantics:</b>
+	 * <ul>
+	 *   <li><b>Immediate Parent Advancement:</b> Unlike {@link #frame(int)}, invoking {@code slice(length)}
+	 *       <b>immediately advances</b> this parent reader's cursor by <code>length</code> bytes upon creation.</li>
+	 *   <li><b>Independent Cursor:</b> The returned sub-reader maintains its own isolated position cursor starting at index 0.
+	 *       Subsequent operations on the slice have zero effect on the parent reader's position, and operations on the parent
+	 *       do not affect the slice.</li>
+	 *   <li><b>Zero Side-Effect Close:</b> Closing the slice is a no-op with respect to the parent reader; it does not skip
+	 *       bytes or modify the parent's position.</li>
+	 *   <li><b>Zero-Copy Performance:</b> For memory-backed readers (such as {@link ByteArrayOwlReader}, {@link NIOReader},
+	 *       {@link MemorySegmentOwlReader}, and {@code Buffer}), slicing is a <b>100% zero-copy</b> operation that shares the
+	 *       underlying bytes without allocating duplicate arrays or copying data. For streaming readers (such as
+	 *       {@link InputStreamOwlReader}), the requested <code>length</code> bytes are eagerly buffered into memory to safely
+	 *       decouple the sub-reader from the parent stream and prevent blocking or deadlock.</li>
+	 * </ul>
 	 *
-	 * @param length number of bytes in the slice.
-	 * @return an independent {@link OwlReader} bounded to <code>length</code> bytes.
-	 * @throws IOException if an I/O error or unexpected EOF occurs.
+	 * @param length number of bytes in the slice. Must be non-negative.
+	 * @return an independent, detached {@link OwlReader} containing the <code>length</code> bytes.
+	 * @throws IndexOutOfBoundsException if <code>length &lt; 0</code>.
+	 * @throws EOFException if fewer than <code>length</code> bytes remain before reaching the end of the data.
+	 * @throws IOException if an I/O error occurs during slicing.
 	 */
 	public default OwlReader slice(int length) throws IOException {
 		if (length < 0) {
@@ -487,13 +515,29 @@ public interface OwlReader extends Closeable, Readable {
 	}
 
 	/**
-	 * Creates a detached, independent {@link OwlReader} containing <code>length</code> bytes starting at the specified
-	 * absolute <code>offset</code>. The parent reader's current {@link #position()} is not modified.
+	 * Creates a detached, concurrent-safe sub-reader containing <code>length</code> bytes starting at the specified
+	 * absolute byte <code>offset</code>.
+	 * <p>
+	 * <b>Absolute Slicing Semantics:</b>
+	 * <ul>
+	 *   <li><b>Untouched Parent Cursor:</b> The parent reader's current {@link #position()} is completely unchanged by
+	 *       this call, and closing the returned slice has no side-effects on the parent.</li>
+	 *   <li><b>Independent Cursor:</b> The returned sub-reader maintains its own isolated position cursor starting at index 0
+	 *       relative to the slice.</li>
+	 *   <li><b>Zero-Copy:</b> On random-access and memory-backed readers (such as {@link ByteArrayOwlReader},
+	 *       {@link NIOReader}, {@link MemorySegmentOwlReader}, and {@code Buffer}), this operation produces a zero-copy
+	 *       window over the underlying storage.</li>
+	 *   <li><b>Random Access Requirement:</b> Streaming implementations that do not support random seeking throw
+	 *       {@link UnsupportedOperationException}.</li>
+	 * </ul>
 	 *
-	 * @param offset absolute offset to start the slice.
-	 * @param length number of bytes in the slice.
-	 * @return an independent {@link OwlReader} bounded to <code>length</code> bytes.
-	 * @throws IOException if an I/O error or unexpected EOF occurs.
+	 * @param offset the absolute starting byte index within the underlying storage. Must be non-negative.
+	 * @param length number of bytes in the slice. Must be non-negative.
+	 * @return an independent, detached {@link OwlReader} containing the sliced window.
+	 * @throws IndexOutOfBoundsException if <code>offset &lt; 0</code>, <code>length &lt; 0</code>, or
+	 *                                   <code>offset + length</code> exceeds the bounds of the reader.
+	 * @throws UnsupportedOperationException if this reader does not support absolute offset indexing.
+	 * @throws IOException if an I/O error occurs.
 	 */
 	public default OwlReader slice(int offset, int length) throws IOException {
 		throw new UnsupportedOperationException();
