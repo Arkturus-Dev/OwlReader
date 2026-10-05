@@ -107,6 +107,32 @@ public class MemorySegmentOwlWriter extends BaseOwlWriter {
 	}
 
 	@Override
+	public void writeVarInt(int value) throws IOException {
+		synchronized (writeLock) {
+			while ((value & ~0x7F) != 0) {
+				checkCapacity(1);
+				segment.set(ValueLayout.JAVA_BYTE, position++, (byte) ((value & 0x7F) | 0x80));
+				value >>>= 7;
+			}
+			checkCapacity(1);
+			segment.set(ValueLayout.JAVA_BYTE, position++, (byte) (value & 0x7F));
+		}
+	}
+
+	@Override
+	public void writeVarLong(long value) throws IOException {
+		synchronized (writeLock) {
+			while ((value & ~0x7FL) != 0) {
+				checkCapacity(1);
+				segment.set(ValueLayout.JAVA_BYTE, position++, (byte) (((int) value & 0x7F) | 0x80));
+				value >>>= 7;
+			}
+			checkCapacity(1);
+			segment.set(ValueLayout.JAVA_BYTE, position++, (byte) ((int) value & 0x7F));
+		}
+	}
+
+	@Override
 	public void writeFloat(float f) throws IOException {
 		synchronized (writeLock) {
 			checkCapacity(4);

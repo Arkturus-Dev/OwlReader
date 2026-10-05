@@ -867,6 +867,42 @@ public class Buffer implements ReadableBuffer, WritableBuffer {
 	}
 
 	@Override
+	public Buffer writeVarInt(int value) {
+		WritableBuffer.super.writeVarInt(value);
+		return this;
+	}
+
+	@Override
+	public Buffer writeVarLong(long value) {
+		WritableBuffer.super.writeVarLong(value);
+		return this;
+	}
+
+	@Override
+	public Buffer writeSignedVarInt(int value) {
+		WritableBuffer.super.writeSignedVarInt(value);
+		return this;
+	}
+
+	@Override
+	public Buffer writeZigZagVarInt(int value) {
+		WritableBuffer.super.writeZigZagVarInt(value);
+		return this;
+	}
+
+	@Override
+	public Buffer writeSignedVarLong(long value) {
+		WritableBuffer.super.writeSignedVarLong(value);
+		return this;
+	}
+
+	@Override
+	public Buffer writeZigZagVarLong(long value) {
+		WritableBuffer.super.writeZigZagVarLong(value);
+		return this;
+	}
+
+	@Override
 	public OwlWriter writer() {
 		return new BufferWriter();
 	}

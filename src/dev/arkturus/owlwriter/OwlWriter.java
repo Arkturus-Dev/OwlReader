@@ -11,6 +11,7 @@ import java.util.function.Function;
 import dev.arkturus.nullanalysis.annotations.Nullable;
 import dev.arkturus.owl.Endian;
 import dev.arkturus.owl.UnsafeUnsignedException;
+import dev.arkturus.owl.VarInt;
 
 public interface OwlWriter extends Closeable {
 
@@ -28,6 +29,74 @@ public interface OwlWriter extends Closeable {
 
 	public default void writeDouble(double d) throws IOException {
 		writeLong(Double.doubleToRawLongBits(d));
+	}
+
+	/**
+	 * Writes a variable-length 32-bit integer (VarInt) using 7-bit continuation chunks.
+	 *
+	 * @param value the integer value to encode.
+	 * @throws IOException if an I/O error occurs.
+	 */
+	public default void writeVarInt(int value) throws IOException {
+		while ((value & ~0x7F) != 0) {
+			writeByte((byte) ((value & 0x7F) | 0x80));
+			value >>>= 7;
+		}
+		writeByte((byte) (value & 0x7F));
+	}
+
+	/**
+	 * Writes a variable-length 64-bit long (VarLong) using 7-bit continuation chunks.
+	 *
+	 * @param value the long value to encode.
+	 * @throws IOException if an I/O error occurs.
+	 */
+	public default void writeVarLong(long value) throws IOException {
+		while ((value & ~0x7FL) != 0) {
+			writeByte((byte) (((int) value & 0x7F) | 0x80));
+			value >>>= 7;
+		}
+		writeByte((byte) ((int) value & 0x7F));
+	}
+
+	/**
+	 * Writes a 32-bit signed integer using ZigZag and VarInt encoding.
+	 *
+	 * @param value the signed integer to encode.
+	 * @throws IOException if an I/O error occurs.
+	 */
+	public default void writeSignedVarInt(int value) throws IOException {
+		writeVarInt(VarInt.encodeZigZag32(value));
+	}
+
+	/**
+	 * Writes a 32-bit signed integer using ZigZag and VarInt encoding. Alias for {@link #writeSignedVarInt(int)}.
+	 *
+	 * @param value the signed integer to encode.
+	 * @throws IOException if an I/O error occurs.
+	 */
+	public default void writeZigZagVarInt(int value) throws IOException {
+		writeSignedVarInt(value);
+	}
+
+	/**
+	 * Writes a 64-bit signed long using ZigZag and VarLong encoding.
+	 *
+	 * @param value the signed long to encode.
+	 * @throws IOException if an I/O error occurs.
+	 */
+	public default void writeSignedVarLong(long value) throws IOException {
+		writeVarLong(VarInt.encodeZigZag64(value));
+	}
+
+	/**
+	 * Writes a 64-bit signed long using ZigZag and VarLong encoding. Alias for {@link #writeSignedVarLong(long)}.
+	 *
+	 * @param value the signed long to encode.
+	 * @throws IOException if an I/O error occurs.
+	 */
+	public default void writeZigZagVarLong(long value) throws IOException {
+		writeSignedVarLong(value);
 	}
 
 	public default void writeUByte(short s) throws IOException {

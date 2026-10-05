@@ -75,6 +75,38 @@ public class ByteArrayOwlWriter extends BaseOwlWriter {
 	}
 
 	@Override
+	public void writeVarInt(int value) throws IOException {
+		synchronized (writeLock) {
+			try {
+				while ((value & ~0x7F) != 0) {
+					out[position++] = (byte) ((value & 0x7F) | 0x80);
+					value >>>= 7;
+				}
+				out[position++] = (byte) (value & 0x7F);
+			} catch (ArrayIndexOutOfBoundsException e) {
+				position = out.length;
+				throw new EOFException("End of byte array reached while writing VarInt.");
+			}
+		}
+	}
+
+	@Override
+	public void writeVarLong(long value) throws IOException {
+		synchronized (writeLock) {
+			try {
+				while ((value & ~0x7FL) != 0) {
+					out[position++] = (byte) (((int) value & 0x7F) | 0x80);
+					value >>>= 7;
+				}
+				out[position++] = (byte) ((int) value & 0x7F);
+			} catch (ArrayIndexOutOfBoundsException e) {
+				position = out.length;
+				throw new EOFException("End of byte array reached while writing VarLong.");
+			}
+		}
+	}
+
+	@Override
 	public void write(byte[] bytes, int off, int len) throws IOException {
 		Objects.checkFromIndexSize(off, len, bytes.length);
 		synchronized (writeLock) {
