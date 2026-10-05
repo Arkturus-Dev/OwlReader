@@ -251,4 +251,202 @@ public class NIOReader extends BaseOwlReader {
 		}
 	}
 
+	@Override
+	public OwlReader slice(int sliceLength) throws IOException {
+		if (sliceLength < 0) {
+			throw new IndexOutOfBoundsException("sliceLength cannot be negative: " + sliceLength);
+		}
+		synchronized (readLock) {
+			if (buffer.remaining() < sliceLength) {
+				throw new EOFException("Unexpected EOF: requested " + sliceLength + ", available " + buffer.remaining());
+			}
+			int oldLimit = buffer.limit();
+			buffer.limit(buffer.position() + sliceLength);
+			ByteBuffer child = buffer.slice();
+			child.order(buffer.order());
+			buffer.limit(oldLimit);
+			buffer.position(buffer.position() + sliceLength);
+			return new NIOReader(child, getEndian());
+		}
+	}
+
+	@Override
+	public OwlReader slice(int sliceOffset, int sliceLength) throws IOException {
+		if (sliceOffset < 0 || sliceLength < 0 || sliceOffset + sliceLength > buffer.limit()) {
+			throw new IndexOutOfBoundsException("Invalid slice bounds: offset=" + sliceOffset + ", length=" + sliceLength + ", limit=" + buffer.limit());
+		}
+		synchronized (readLock) {
+			ByteBuffer duplicate = buffer.duplicate();
+			duplicate.position(sliceOffset);
+			duplicate.limit(sliceOffset + sliceLength);
+			ByteBuffer child = duplicate.slice();
+			child.order(buffer.order());
+			return new NIOReader(child, getEndian());
+		}
+	}
+
+	@Override
+	public OwlReader frame(int frameLength) {
+		if (frameLength < 0) {
+			throw new IndexOutOfBoundsException("frameLength cannot be negative: " + frameLength);
+		}
+		synchronized (readLock) {
+			if (buffer.remaining() < frameLength) {
+				throw new IllegalArgumentException("frameLength exceeds available data: " + frameLength + " > " + buffer.remaining());
+			}
+			return new FramedNIOReader(frameLength);
+		}
+	}
+
+	private class FramedNIOReader extends BaseOwlReader {
+		private final int frameBound;
+		private int       framePos = 0;
+
+		public FramedNIOReader(int frameBound) {
+			this.frameBound = frameBound;
+			setEndian(NIOReader.this.getEndian());
+		}
+
+		private void advanceFrame(int count) throws EOFException {
+			if (framePos + count > frameBound) {
+				throw new EOFException("End of frame reached.");
+			}
+			framePos += count;
+		}
+
+		@Override
+		public byte readByte() throws IOException {
+			synchronized (readLock) {
+				advanceFrame(1);
+				return NIOReader.this.readByte();
+			}
+		}
+
+		@Override
+		public short readShort() throws IOException {
+			synchronized (readLock) {
+				advanceFrame(2);
+				return NIOReader.this.readShort();
+			}
+		}
+
+		@Override
+		public int readInt() throws IOException {
+			synchronized (readLock) {
+				advanceFrame(4);
+				return NIOReader.this.readInt();
+			}
+		}
+
+		@Override
+		public long readLong() throws IOException {
+			synchronized (readLock) {
+				advanceFrame(8);
+				return NIOReader.this.readLong();
+			}
+		}
+
+		@Override
+		public int read(byte[] out, int off, int len) throws IOException {
+			Objects.checkFromIndexSize(off, len, out.length);
+			synchronized (readLock) {
+				int toRead = Math.min(len, frameBound - framePos);
+				int read = NIOReader.this.read(out, off, toRead);
+				framePos += read;
+				return read;
+			}
+		}
+
+		@Override
+		public String readString(int bytes, Charset encoding) throws IOException {
+			synchronized (readLock) {
+				advanceFrame(bytes);
+				return NIOReader.this.readString(bytes, encoding);
+			}
+		}
+
+		@Override
+		public String readNullString(Charset encoding) throws IOException {
+			synchronized (readLock) {
+				byte[] buf = new byte[frameBound - framePos];
+				int size = 0;
+				boolean foundNull = false;
+				while (framePos < frameBound) {
+					advanceFrame(1);
+					byte b = NIOReader.this.readByte();
+					if (b == 0) {
+						foundNull = true;
+						break;
+					}
+					buf[size++] = b;
+				}
+				if (!foundNull) {
+					throw new EOFException("Unexpected EOF searching for null terminator.");
+				}
+				return new String(buf, 0, size, encoding);
+			}
+		}
+
+		@Override
+		public String readLine(Charset encoding) throws IOException {
+			synchronized (readLock) {
+				int remaining = frameBound - framePos;
+				if (remaining <= 0) {
+					return "";
+				}
+				byte[] lineBuf = new byte[remaining];
+				int size = 0;
+				boolean foundNewline = false;
+				while (framePos < frameBound) {
+					advanceFrame(1);
+					byte b = NIOReader.this.readByte();
+					if (b == '\n') {
+						foundNewline = true;
+						break;
+					}
+					lineBuf[size++] = b;
+				}
+				if (size == 0 && !foundNewline) {
+					return "";
+				}
+				int len = (size > 0 && lineBuf[size - 1] == '\r') ? size - 1 : size;
+				return new String(lineBuf, 0, len, encoding);
+			}
+		}
+
+		@Override
+		public void skipBytes(long count) throws IOException {
+			synchronized (readLock) {
+				long toSkip = Math.min((long) (frameBound - framePos), count);
+				advanceFrame((int) toSkip);
+				NIOReader.this.skipBytes(toSkip);
+			}
+		}
+
+		@Override
+		public boolean hasData() {
+			synchronized (readLock) {
+				return framePos < frameBound && NIOReader.this.hasData();
+			}
+		}
+
+		@Override
+		public int position() {
+			synchronized (readLock) {
+				return framePos;
+			}
+		}
+
+		@Override
+		public void close() throws IOException {
+			synchronized (readLock) {
+				int unread = frameBound - framePos;
+				if (unread > 0) {
+					NIOReader.this.skipBytes(unread);
+					framePos = frameBound;
+				}
+			}
+		}
+	}
+
 }

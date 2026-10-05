@@ -216,7 +216,29 @@ public class InputStreamOwlReader extends BaseOwlReader {
 
 	@Override
 	public OwlReader frame(int length) {
+		if (length < 0) {
+			throw new IndexOutOfBoundsException("length cannot be negative: " + length);
+		}
 		return new FramedInputStreamOwlReader(length);
+	}
+
+	@Override
+	public OwlReader slice(int sliceLength) throws IOException {
+		if (sliceLength < 0) {
+			throw new IndexOutOfBoundsException("sliceLength cannot be negative: " + sliceLength);
+		}
+		byte[] data = new byte[sliceLength];
+		int totalRead = 0;
+		synchronized (readLock) {
+			while (totalRead < sliceLength) {
+				int read = this.read(data, totalRead, sliceLength - totalRead);
+				if (read <= 0) {
+					throw new EOFException("Unexpected EOF while slicing: requested " + sliceLength + ", read " + totalRead);
+				}
+				totalRead += read;
+			}
+		}
+		return new ByteArrayOwlReader(data, getEndian());
 	}
 
 	private class FramedInputStreamOwlReader extends BaseOwlReader {

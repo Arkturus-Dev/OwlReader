@@ -258,4 +258,194 @@ public class MemorySegmentOwlReader extends BaseOwlReader {
 		}
 	}
 
+	@Override
+	public OwlReader slice(int sliceLength) throws IOException {
+		if (sliceLength < 0) {
+			throw new IndexOutOfBoundsException("sliceLength cannot be negative: " + sliceLength);
+		}
+		synchronized (readLock) {
+			if (position + sliceLength > segment.byteSize()) {
+				throw new EOFException("Unexpected EOF: requested " + sliceLength + ", available " + (segment.byteSize() - position));
+			}
+			MemorySegment child = segment.asSlice(position, sliceLength);
+			position += sliceLength;
+			return new MemorySegmentOwlReader(child, getEndian());
+		}
+	}
+
+	@Override
+	public OwlReader slice(int sliceOffset, int sliceLength) throws IOException {
+		if (sliceOffset < 0 || sliceLength < 0 || sliceOffset + sliceLength > segment.byteSize()) {
+			throw new IndexOutOfBoundsException("Invalid slice bounds: offset=" + sliceOffset + ", length=" + sliceLength + ", limit=" + segment.byteSize());
+		}
+		synchronized (readLock) {
+			MemorySegment child = segment.asSlice(sliceOffset, sliceLength);
+			return new MemorySegmentOwlReader(child, getEndian());
+		}
+	}
+
+	@Override
+	public OwlReader frame(int frameLength) {
+		if (frameLength < 0) {
+			throw new IndexOutOfBoundsException("frameLength cannot be negative: " + frameLength);
+		}
+		synchronized (readLock) {
+			if (position + frameLength > segment.byteSize()) {
+				throw new IllegalArgumentException("frameLength exceeds available data: " + frameLength + " > " + (segment.byteSize() - position));
+			}
+			return new FramedMemorySegmentOwlReader(frameLength);
+		}
+	}
+
+	private class FramedMemorySegmentOwlReader extends BaseOwlReader {
+		private final int frameBound;
+		private int       framePos = 0;
+
+		public FramedMemorySegmentOwlReader(int frameBound) {
+			this.frameBound = frameBound;
+			setEndian(MemorySegmentOwlReader.this.getEndian());
+		}
+
+		private void advanceFrame(int count) throws EOFException {
+			if (framePos + count > frameBound) {
+				throw new EOFException("End of frame reached.");
+			}
+			framePos += count;
+		}
+
+		@Override
+		public byte readByte() throws IOException {
+			synchronized (readLock) {
+				advanceFrame(1);
+				return MemorySegmentOwlReader.this.readByte();
+			}
+		}
+
+		@Override
+		public short readShort() throws IOException {
+			synchronized (readLock) {
+				advanceFrame(2);
+				return MemorySegmentOwlReader.this.readShort();
+			}
+		}
+
+		@Override
+		public int readInt() throws IOException {
+			synchronized (readLock) {
+				advanceFrame(4);
+				return MemorySegmentOwlReader.this.readInt();
+			}
+		}
+
+		@Override
+		public long readLong() throws IOException {
+			synchronized (readLock) {
+				advanceFrame(8);
+				return MemorySegmentOwlReader.this.readLong();
+			}
+		}
+
+		@Override
+		public int read(byte[] out, int off, int len) throws IOException {
+			Objects.checkFromIndexSize(off, len, out.length);
+			synchronized (readLock) {
+				int toRead = Math.min(len, frameBound - framePos);
+				int read = MemorySegmentOwlReader.this.read(out, off, toRead);
+				framePos += read;
+				return read;
+			}
+		}
+
+		@Override
+		public String readString(int bytes, Charset encoding) throws IOException {
+			synchronized (readLock) {
+				advanceFrame(bytes);
+				return MemorySegmentOwlReader.this.readString(bytes, encoding);
+			}
+		}
+
+		@Override
+		public String readNullString(Charset encoding) throws IOException {
+			synchronized (readLock) {
+				byte[] buf = new byte[frameBound - framePos];
+				int size = 0;
+				boolean foundNull = false;
+				while (framePos < frameBound) {
+					advanceFrame(1);
+					byte b = MemorySegmentOwlReader.this.readByte();
+					if (b == 0) {
+						foundNull = true;
+						break;
+					}
+					buf[size++] = b;
+				}
+				if (!foundNull) {
+					throw new EOFException("Unexpected EOF searching for null terminator.");
+				}
+				return new String(buf, 0, size, encoding);
+			}
+		}
+
+		@Override
+		public String readLine(Charset encoding) throws IOException {
+			synchronized (readLock) {
+				int remaining = frameBound - framePos;
+				if (remaining <= 0) {
+					return "";
+				}
+				byte[] lineBuf = new byte[remaining];
+				int size = 0;
+				boolean foundNewline = false;
+				while (framePos < frameBound) {
+					advanceFrame(1);
+					byte b = MemorySegmentOwlReader.this.readByte();
+					if (b == '\n') {
+						foundNewline = true;
+						break;
+					}
+					lineBuf[size++] = b;
+				}
+				if (size == 0 && !foundNewline) {
+					return "";
+				}
+				int len = (size > 0 && lineBuf[size - 1] == '\r') ? size - 1 : size;
+				return new String(lineBuf, 0, len, encoding);
+			}
+		}
+
+		@Override
+		public void skipBytes(long count) throws IOException {
+			synchronized (readLock) {
+				long toSkip = Math.min((long) (frameBound - framePos), count);
+				advanceFrame((int) toSkip);
+				MemorySegmentOwlReader.this.skipBytes(toSkip);
+			}
+		}
+
+		@Override
+		public boolean hasData() {
+			synchronized (readLock) {
+				return framePos < frameBound && MemorySegmentOwlReader.this.hasData();
+			}
+		}
+
+		@Override
+		public int position() {
+			synchronized (readLock) {
+				return framePos;
+			}
+		}
+
+		@Override
+		public void close() throws IOException {
+			synchronized (readLock) {
+				int unread = frameBound - framePos;
+				if (unread > 0) {
+					MemorySegmentOwlReader.this.skipBytes(unread);
+					framePos = frameBound;
+				}
+			}
+		}
+	}
+
 }
