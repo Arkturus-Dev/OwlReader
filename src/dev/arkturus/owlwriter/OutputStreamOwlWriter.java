@@ -103,6 +103,12 @@ public class OutputStreamOwlWriter extends BaseOwlWriter {
 		}
 
 		@Override
+		public synchronized void writeInt24(int i) throws IOException {
+			advance(3);
+			OutputStreamOwlWriter.this.writeInt24(i);
+		}
+
+		@Override
 		public synchronized void writeInt(int i) throws IOException {
 			advance(4);
 			OutputStreamOwlWriter.this.writeInt(i);

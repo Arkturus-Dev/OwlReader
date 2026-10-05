@@ -25,6 +25,60 @@ public class EndianTest {
 	}
 
 	@Test
+	public void testInt24RoundTrip() {
+		int[] testValues = { 0, 1, -1, 42, -42, 8388607, -8388608, 0x123456, -1000, 1000, 0x007FFFFF, -0x00800000 };
+
+		for (Endian endian : Endian.values()) {
+			byte[] buffer = new byte[3];
+			for (int val : testValues) {
+				endian.writeInt24(val, buffer, 0);
+				int read = endian.readInt24(buffer, 0);
+				assertEquals(val, read, "Failed for " + endian + " int24 " + val);
+			}
+		}
+	}
+
+	@Test
+	public void testUInt24RoundTrip() {
+		int[] testValues = { 0, 1, 42, 0x7FFFFF, 0x800000, 0xFFFFFF, 0x123456, 0x00A0B0 };
+
+		for (Endian endian : Endian.values()) {
+			byte[] buffer = new byte[3];
+			for (int val : testValues) {
+				endian.writeInt24(val, buffer, 0);
+				int read = endian.readUInt24(buffer, 0);
+				assertEquals(val, read, "Failed for " + endian + " uint24 0x" + Integer.toHexString(val));
+			}
+		}
+	}
+
+	@Test
+	public void testInt24ExactByteLayout() {
+		byte[] buffer = new byte[3];
+
+		Endian.BIG.writeInt24(0x010203, buffer, 0);
+		assertArrayEquals(new byte[] { 0x01, 0x02, 0x03 }, buffer, "Big Endian int24 byte order");
+
+		Endian.LITTLE.writeInt24(0x010203, buffer, 0);
+		assertArrayEquals(new byte[] { 0x03, 0x02, 0x01 }, buffer, "Little Endian int24 byte order");
+	}
+
+	@Test
+	public void testInt24SignExtension() {
+		byte[] bigBytesNegative = new byte[] { (byte) 0x80, 0x00, 0x00 };
+		assertEquals(-8388608, Endian.BIG.readInt24(bigBytesNegative, 0));
+		assertEquals(8388608, Endian.BIG.readUInt24(bigBytesNegative, 0));
+
+		byte[] littleBytesNegative = new byte[] { 0x00, 0x00, (byte) 0x80 };
+		assertEquals(-8388608, Endian.LITTLE.readInt24(littleBytesNegative, 0));
+		assertEquals(8388608, Endian.LITTLE.readUInt24(littleBytesNegative, 0));
+
+		byte[] bigBytesMinusOne = new byte[] { (byte) 0xFF, (byte) 0xFF, (byte) 0xFF };
+		assertEquals(-1, Endian.BIG.readInt24(bigBytesMinusOne, 0));
+		assertEquals(16777215, Endian.BIG.readUInt24(bigBytesMinusOne, 0));
+	}
+
+	@Test
 	public void testIntRoundTrip() {
 		int[] testValues = { 0, 1, -1, 42, -42, Integer.MAX_VALUE, Integer.MIN_VALUE, 0x12345678, 0x80000000,
 				0x00800000, 0x00008000, 0x00000080 };

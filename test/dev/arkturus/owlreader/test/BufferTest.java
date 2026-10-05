@@ -247,4 +247,18 @@ public class BufferTest {
 		buffer.write(new byte[] { (byte) 0x80, (byte) 0x80, (byte) 0x80, (byte) 0x80, (byte) 0x80, (byte) 0x80 });
 		assertThrows(java.io.UncheckedIOException.class, () -> buffer.readVarInt());
 	}
+
+	@Test
+	public void testBufferInt24Operations() {
+		Buffer buffer = new Buffer();
+		buffer.writeBytes24(0x123456)
+			.writeInt24(-42)
+			.writeUInt24(16777215)
+			.writeUMedium(0x800000);
+
+		assertEquals(0x123456, buffer.readInt24());
+		assertEquals(-42, buffer.readMedium());
+		assertEquals(16777215, buffer.readUInt24());
+		assertEquals(0x800000, buffer.readUMedium());
+	}
 }

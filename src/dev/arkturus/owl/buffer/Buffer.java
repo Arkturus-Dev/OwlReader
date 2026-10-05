@@ -495,6 +495,18 @@ public class Buffer implements ReadableBuffer, WritableBuffer {
 			}
 
 			@Override
+			public int readInt24() throws IOException {
+				advanceFrame(3);
+				return BufferReader.this.readInt24();
+			}
+
+			@Override
+			public int readUInt24() throws IOException {
+				advanceFrame(3);
+				return BufferReader.this.readUInt24();
+			}
+
+			@Override
 			public int readInt() throws IOException {
 				advanceFrame(4);
 				return BufferReader.this.readInt();
@@ -848,6 +860,45 @@ public class Buffer implements ReadableBuffer, WritableBuffer {
 		endian.writeShort(s, buffer, writeIndex);
 		writeIndex += 2;
 		return this;
+	}
+
+	@Override
+	public Buffer writeBytes24(int i) {
+		ensureCapacity(3);
+		endian.writeInt24(i, buffer, writeIndex);
+		writeIndex += 3;
+		return this;
+	}
+
+	@Override
+	public Buffer writeInt24(int i) {
+		return writeBytes24(i);
+	}
+
+	@Override
+	public Buffer writeMedium(int i) {
+		return writeInt24(i);
+	}
+
+	@Override
+	public Buffer writeUInt24(int i) {
+		return writeInt24(i);
+	}
+
+	@Override
+	public Buffer writeUMedium(int i) {
+		return writeInt24(i);
+	}
+
+	@Override
+	public Buffer writeSUInt24(int i) {
+		WritableBuffer.super.writeSUInt24(i);
+		return this;
+	}
+
+	@Override
+	public Buffer writeSUMedium(int i) {
+		return writeSUInt24(i);
 	}
 
 	@Override

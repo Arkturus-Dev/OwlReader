@@ -28,6 +28,27 @@ public interface Readable {
 	}
 
 	/**
+	 * Reads a signed 24-bit medium integer (3 bytes) from the input.
+	 * The 24-bit value is sign-extended to a 32-bit int (range -8,388,608 to 8,388,607).
+	 *
+	 * @return a signed int representing the 24-bit value.
+	 * @throws IOException if an I/O error occurs.
+	 */
+	public default int readInt24() throws IOException {
+		return getEndian().readInt24(read(3), 0);
+	}
+
+	/**
+	 * Reads a signed 24-bit medium integer (3 bytes) from the input. Alias for {@link #readInt24()}.
+	 *
+	 * @return a signed int representing the 24-bit value.
+	 * @throws IOException if an I/O error occurs.
+	 */
+	public default int readMedium() throws IOException {
+		return readInt24();
+	}
+
+	/**
 	 * Reads an int from the input.
 	 *
 	 * @return an int.
@@ -205,6 +226,73 @@ public interface Readable {
 		if (s < 0)
 			throw new UnsafeUnsignedException(short.class);
 		return s;
+	}
+
+	/**
+	 * Reads an unsigned 24-bit medium integer (3 bytes) from the input.
+	 * Values range from 0 to 16,777,215 (0x00FFFFFF) and fit into an int without overflow.
+	 *
+	 * @return an unsigned 24-bit value as a non-negative int.
+	 * @throws IOException if an I/O error occurs.
+	 */
+	public default int readUInt24() throws IOException {
+		return getEndian().readUInt24(read(3), 0);
+	}
+
+	/**
+	 * Reads an unsigned 24-bit medium integer from the input. Alias for {@link #readUInt24()}.
+	 *
+	 * @return an unsigned 24-bit value as a non-negative int.
+	 * @throws IOException if an I/O error occurs.
+	 */
+	public default int readUMedium() throws IOException {
+		return readUInt24();
+	}
+
+	/**
+	 * Reads an unsigned 24-bit medium integer from the input. Alias for {@link #readUInt24()}.
+	 *
+	 * @return an unsigned 24-bit value as a non-negative int.
+	 * @throws IOException if an I/O error occurs.
+	 */
+	public default int readUnsignedInt24() throws IOException {
+		return readUInt24();
+	}
+
+	/**
+	 * Reads an unsigned 24-bit medium integer from the input. Alias for {@link #readUInt24()}.
+	 *
+	 * @return an unsigned 24-bit value as a non-negative int.
+	 * @throws IOException if an I/O error occurs.
+	 */
+	public default int readUnsignedMedium() throws IOException {
+		return readUInt24();
+	}
+
+	/**
+	 * Reads a signed 24-bit medium integer from the input, throwing an exception if negative.
+	 *
+	 * @return a non-negative 24-bit int.
+	 * @throws UnsafeUnsignedException if the value would trigger an overflow.
+	 * @throws IOException if an I/O error occurs.
+	 */
+	public default int readSUInt24() throws IOException {
+		int i = readInt24();
+		if (i < 0) {
+			throw new UnsafeUnsignedException(int.class);
+		}
+		return i;
+	}
+
+	/**
+	 * Reads a signed 24-bit medium integer from the input, throwing an exception if negative. Alias for {@link #readSUInt24()}.
+	 *
+	 * @return a non-negative 24-bit int.
+	 * @throws UnsafeUnsignedException if the value would trigger an overflow.
+	 * @throws IOException if an I/O error occurs.
+	 */
+	public default int readSUMedium() throws IOException {
+		return readSUInt24();
 	}
 
 	/**
