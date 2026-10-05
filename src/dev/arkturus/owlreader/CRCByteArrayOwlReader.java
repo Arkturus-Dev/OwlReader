@@ -14,7 +14,7 @@ public class CRCByteArrayOwlReader extends BaseOwlReader implements CRCReader {
 	}
 
 	private void addCRC(int length) {
-		crc.update(reader.in, reader.position - length, length);
+		crc.update(reader.in, reader.offset + reader.position - length, length);
 	}
 
 	@Override
@@ -155,6 +155,35 @@ public class CRCByteArrayOwlReader extends BaseOwlReader implements CRCReader {
 	public void close() throws IOException {
 		synchronized (reader.readLock) {
 			reader.close();
+		}
+	}
+
+	@Override
+	public OwlReader slice(int sliceLength) throws IOException {
+		synchronized (reader.readLock) {
+			OwlReader child = reader.slice(sliceLength);
+			if (child instanceof ByteArrayOwlReader) {
+				return new CRCByteArrayOwlReader((ByteArrayOwlReader) child);
+			}
+			return child;
+		}
+	}
+
+	@Override
+	public OwlReader slice(int sliceOffset, int sliceLength) throws IOException {
+		synchronized (reader.readLock) {
+			OwlReader child = reader.slice(sliceOffset, sliceLength);
+			if (child instanceof ByteArrayOwlReader) {
+				return new CRCByteArrayOwlReader((ByteArrayOwlReader) child);
+			}
+			return child;
+		}
+	}
+
+	@Override
+	public OwlReader frame(int frameLength) {
+		synchronized (reader.readLock) {
+			return reader.frame(frameLength);
 		}
 	}
 

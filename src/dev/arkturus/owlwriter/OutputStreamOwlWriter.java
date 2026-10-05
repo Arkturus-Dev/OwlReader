@@ -121,6 +121,34 @@ public class OutputStreamOwlWriter extends BaseOwlWriter {
 		}
 
 		@Override
+		public synchronized void writeNullString(String s, Charset encoding) throws IOException {
+			synchronized (OutputStreamOwlWriter.this) {
+				super.writeNullString(s, encoding);
+			}
+		}
+
+		@Override
+		public synchronized void writePascalByte(String s, Charset encoding) throws IOException {
+			synchronized (OutputStreamOwlWriter.this) {
+				super.writePascalByte(s, encoding);
+			}
+		}
+
+		@Override
+		public synchronized void writePascalShort(String s, Charset encoding) throws IOException {
+			synchronized (OutputStreamOwlWriter.this) {
+				super.writePascalShort(s, encoding);
+			}
+		}
+
+		@Override
+		public synchronized void writePascalInt(String s, Charset encoding) throws IOException {
+			synchronized (OutputStreamOwlWriter.this) {
+				super.writePascalInt(s, encoding);
+			}
+		}
+
+		@Override
 		public synchronized void close() throws IOException {
 			while (position < length)
 				writeByte((byte) 0);
