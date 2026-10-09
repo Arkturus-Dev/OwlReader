@@ -1,0 +1,349 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>OwlReader - Modern Binary I/O & Buffering for Java 21</title>
+  <meta name="description" content="High-performance, zero-copy binary I/O, serialization, and buffering library for Java 21 with Panama MemorySegment, NIO, VarInt, and 24-bit integer support.">
+  <link rel="icon" type="image/jpeg" href="assets/logo.jpg">
+  <meta property="og:image" content="assets/logo.jpg">
+  <style>
+    :root {
+      --bg: #0d1117;
+      --card-bg: #161b22;
+      --card-border: #30363d;
+      --text: #e6edf3;
+      --text-muted: #8b949e;
+      --primary: #58a6ff;
+      --primary-hover: #79c0ff;
+      --accent: #238636;
+      --accent-hover: #2ea043;
+      --code-bg: #1f242c;
+      --border-color: #21262d;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      background-color: var(--bg);
+      color: var(--text);
+      line-height: 1.6;
+    }
+    a { color: var(--primary); text-decoration: none; }
+    a:hover { color: var(--primary-hover); text-decoration: underline; }
+    header {
+      border-bottom: 1px solid var(--border-color);
+      padding: 1rem 2rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      position: sticky;
+      top: 0;
+      background: rgba(13, 17, 23, 0.95);
+      backdrop-filter: blur(10px);
+      z-index: 100;
+    }
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      font-size: 1.25rem;
+      font-weight: 700;
+      color: var(--text);
+    }
+    .brand-logo {
+      width: 36px;
+      height: 36px;
+      border-radius: 8px;
+      object-fit: cover;
+      border: 1px solid var(--card-border);
+    }
+    .badge {
+      font-size: 0.75rem;
+      background: #238636;
+      color: white;
+      padding: 0.15rem 0.5rem;
+      border-radius: 12px;
+      font-weight: 600;
+    }
+    .nav-links {
+      display: flex;
+      gap: 1.5rem;
+      align-items: center;
+      font-size: 0.95rem;
+    }
+    .nav-btn {
+      background: var(--accent);
+      color: white !important;
+      padding: 0.4rem 1rem;
+      border-radius: 6px;
+      font-weight: 600;
+      transition: background 0.2s;
+    }
+    .nav-btn:hover {
+      background: var(--accent-hover);
+      text-decoration: none;
+    }
+    .hero {
+      max-width: 1000px;
+      margin: 3.5rem auto 3rem;
+      padding: 0 1.5rem;
+      text-align: center;
+    }
+    .hero-logo {
+      width: 130px;
+      height: 130px;
+      border-radius: 24px;
+      margin: 0 auto 1.5rem;
+      display: block;
+      box-shadow: 0 12px 36px rgba(0, 0, 0, 0.6), 0 0 50px rgba(88, 166, 255, 0.2);
+      border: 1px solid var(--card-border);
+      object-fit: cover;
+    }
+    .hero h1 {
+      font-size: 3rem;
+      line-height: 1.2;
+      margin-bottom: 1.25rem;
+      background: linear-gradient(135deg, #ffffff 40%, var(--primary) 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+    .hero p {
+      font-size: 1.25rem;
+      color: var(--text-muted);
+      max-width: 750px;
+      margin: 0 auto 2rem;
+    }
+    .hero-actions {
+      display: flex;
+      justify-content: center;
+      gap: 1rem;
+      margin-bottom: 3rem;
+    }
+    .btn {
+      padding: 0.75rem 1.5rem;
+      border-radius: 6px;
+      font-weight: 600;
+      font-size: 1rem;
+      transition: all 0.2s;
+      display: inline-block;
+    }
+    .btn-primary {
+      background: var(--primary);
+      color: #0d1117 !important;
+    }
+    .btn-primary:hover {
+      background: var(--primary-hover);
+      text-decoration: none;
+    }
+    .btn-secondary {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      color: var(--text) !important;
+    }
+    .btn-secondary:hover {
+      background: #21262d;
+      text-decoration: none;
+    }
+    .container {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 0 1.5rem 5rem;
+    }
+    .section-title {
+      font-size: 1.75rem;
+      margin-bottom: 1.5rem;
+      text-align: center;
+    }
+    .features-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+      gap: 1.5rem;
+      margin-bottom: 4rem;
+    }
+    .feature-card {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 8px;
+      padding: 1.5rem;
+      transition: border-color 0.2s, transform 0.2s;
+    }
+    .feature-card:hover {
+      border-color: var(--primary);
+      transform: translateY(-2px);
+    }
+    .feature-icon {
+      font-size: 1.75rem;
+      margin-bottom: 0.75rem;
+    }
+    .feature-card h3 {
+      font-size: 1.2rem;
+      margin-bottom: 0.5rem;
+      color: var(--text);
+    }
+    .feature-card p {
+      color: var(--text-muted);
+      font-size: 0.95rem;
+    }
+    .code-section {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 8px;
+      margin-bottom: 4rem;
+      overflow: hidden;
+    }
+    .code-header {
+      background: #1c2128;
+      padding: 0.75rem 1.25rem;
+      border-bottom: 1px solid var(--card-border);
+      font-weight: 600;
+      font-size: 0.9rem;
+      color: var(--text-muted);
+      display: flex;
+      justify-content: space-between;
+    }
+    pre {
+      padding: 1.25rem;
+      overflow-x: auto;
+      font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
+      font-size: 0.9rem;
+      line-height: 1.5;
+      color: #e6edf3;
+    }
+    .install-box {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 8px;
+      padding: 1.5rem;
+      margin-bottom: 4rem;
+    }
+    footer {
+      border-top: 1px solid var(--border-color);
+      padding: 2rem;
+      text-align: center;
+      color: var(--text-muted);
+      font-size: 0.9rem;
+    }
+  </style>
+</head>
+<body>
+
+  <header>
+    <div class="brand">
+      <img src="assets/logo.jpg" alt="OwlReader Logo" class="brand-logo">
+      <span>OwlReader</span>
+      <span class="badge">Java 21</span>
+    </div>
+    <nav class="nav-links">
+      <a href="./apidocs/">Javadoc API</a>
+      <a href="https://github.com/Arkturus-Dev/OwlReader" target="_blank" rel="noopener">GitHub</a>
+      <a href="./apidocs/" class="nav-btn">API Reference</a>
+    </nav>
+  </header>
+
+  <main>
+    <section class="hero">
+      <img src="assets/logo.jpg" alt="OwlReader Logo" class="hero-logo">
+      <h1>Modern Binary I/O & Buffering</h1>
+      <p>A high-performance Java 21 library delivering zero-copy slicing, VarInt & ZigZag codecs, 24-bit medium integers, Panama MemorySegment, and unified stream framing.</p>
+      <div class="hero-actions">
+        <a href="./apidocs/" class="btn btn-primary">Browse Javadoc API</a>
+        <a href="https://github.com/Arkturus-Dev/OwlReader" target="_blank" rel="noopener" class="btn btn-secondary">View on GitHub</a>
+      </div>
+    </section>
+
+    <div class="container">
+      <h2 class="section-title">Core Features</h2>
+      <div class="features-grid">
+        <div class="feature-card">
+          <div class="feature-icon">⚡</div>
+          <h3>Zero-Copy Slicing</h3>
+          <p>Split, slice, and delegate binary streams with <code>reader.slice(length)</code> across byte arrays, memory segments, and direct buffers without allocations or byte copying.</p>
+        </div>
+
+        <div class="feature-card">
+          <div class="feature-icon">📦</div>
+          <h3>VarInt & ZigZag Codecs</h3>
+          <p>Standard Protocol Buffers LEB128 compatible variable-length integers and 64-bit longs. ZigZag encoding maps small negative numbers to a single byte.</p>
+        </div>
+
+        <div class="feature-card">
+          <div class="feature-icon">🎯</div>
+          <h3>24-Bit Medium Integers</h3>
+          <p>Native 3-byte protocol header operations with signed <code>readInt24()</code>, unsigned <code>readUInt24()</code>, and <code>writeInt24()</code> across Big and Little Endian.</p>
+        </div>
+
+        <div class="feature-card">
+          <div class="feature-icon">☕</div>
+          <h3>Java 21 Panama FFM</h3>
+          <p>First-class integration with Foreign Function & Memory via <code>MemorySegmentOwlReader</code> and <code>MemorySegmentOwlWriter</code> for off-heap performance.</p>
+        </div>
+
+        <div class="feature-card">
+          <div class="feature-icon">🛡️</div>
+          <h3>Unified Framing & CRC</h3>
+          <p>Enforce strict frame boundaries with <code>reader.frame(length)</code> and compute rolling CRC32 checksums on the fly with <code>CRCByteArrayOwlReader</code>.</p>
+        </div>
+
+        <div class="feature-card">
+          <div class="feature-icon">🔄</div>
+          <h3>Fluent In-Memory Buffers</h3>
+          <p>Rich, fluent <code>Buffer</code> abstraction providing unchecked exception semantics, auto-expansion, delimiter scanning, and NIO Channel read/write.</p>
+        </div>
+      </div>
+
+      <h2 class="section-title">Quick Start Examples</h2>
+
+      <div class="code-section">
+        <div class="code-header">
+          <span>Reading & Writing Medium Integers and VarInts</span>
+          <span>Java 21</span>
+        </div>
+        <pre><code>// In-memory buffer with fluent chaining
+Buffer buffer = new Buffer();
+buffer.writeInt24(0x123456)
+      .writeVarInt(300)
+      .writeSignedVarInt(-42)
+      .writeString("OwlReader");
+
+// Reading primitives back
+int header = buffer.readInt24();          // 0x123456
+int count  = buffer.readVarInt();         // 300
+int delta  = buffer.readSignedVarInt();   // -42 (compressed via ZigZag)
+String tag = buffer.readString(9);        // "OwlReader"</code></pre>
+      </div>
+
+      <div class="code-section">
+        <div class="code-header">
+          <span>Panama Native MemorySegment Zero-Copy I/O</span>
+          <span>Java 21 FFM</span>
+        </div>
+        <pre><code>try (Arena arena = Arena.ofConfined()) {
+    MemorySegment segment = arena.allocate(1024);
+    MemorySegmentOwlWriter writer = new MemorySegmentOwlWriter(segment, Endian.BIG);
+    writer.writeInt24(0xAABBCC);
+    writer.writeLong(123456789012345L);
+
+    MemorySegmentOwlReader reader = new MemorySegmentOwlReader(segment, Endian.BIG);
+    assertEquals(0xAABBCC, reader.readInt24());
+    assertEquals(123456789012345L, reader.readLong());
+}</code></pre>
+      </div>
+
+      <h2 class="section-title">Maven Coordinates</h2>
+      <div class="install-box">
+        <pre><code>&lt;dependency&gt;
+    &lt;groupId&gt;dev.arkturus&lt;/groupId&gt;
+    &lt;artifactId&gt;owlreader&lt;/artifactId&gt;
+    &lt;version&gt;1.0.0&lt;/version&gt;
+&lt;/dependency&gt;</code></pre>
+      </div>
+    </div>
+  </main>
+
+  <footer>
+    <p>OwlReader is maintained by <a href="https://github.com/Arkturus-Dev" target="_blank" rel="noopener">Arkturus-Dev</a>. Licensed under the MIT License.</p>
+    <p style="margin-top: 0.5rem;"><a href="./apidocs/">View Complete Javadoc API Reference</a></p>
+  </footer>
+
+</body>
+</html>

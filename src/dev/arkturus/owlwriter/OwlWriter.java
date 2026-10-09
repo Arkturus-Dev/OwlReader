@@ -179,7 +179,7 @@ public interface OwlWriter extends Closeable {
 	/**
 	 * Set the endianness.
 	 *
-	 * @param encoding a String that translates into a {@link Charset} Encoding.
+	 * @param endian the {@link Endian} byte order.
 	 * @see {@link #writeShort()}
 	 * @see {@link #writeInt()}
 	 * @see {@link #writeLong()}
