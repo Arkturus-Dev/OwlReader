@@ -1,5 +1,6 @@
 package dev.arkturus.owlreader;
 
+import java.io.EOFException;
 import java.io.IOException;
 import java.nio.charset.Charset;
 import java.util.zip.CRC32;

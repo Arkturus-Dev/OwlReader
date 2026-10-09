@@ -5,7 +5,7 @@
 [project]
 name = OwlReader
 default_workflow = build
-threads = 1C
+threads = 2
 offline = false
 
 [jar]
@@ -39,3 +39,8 @@ flags = -B, -V
 description = Build source jar, verify, and install package
 goals = clean, verify, source:jar-no-fork, install
 flags = -B
+
+[workflow.docs]
+description = Generate Javadoc API documentation
+goals = compile, javadoc:javadoc
+flags = -DskipTests=true

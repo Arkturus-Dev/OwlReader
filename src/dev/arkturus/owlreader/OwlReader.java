@@ -25,7 +25,7 @@ public interface OwlReader extends Closeable, Readable {
 	/**
 	 * Set the endianness.
 	 *
-	 * @param encoding a String that translates into a {@link Charset} Encoding.
+	 * @param endian the {@link Endian} byte order.
 	 * @see {@link #readShort()}
 	 * @see {@link #readInt()}
 	 * @see {@link #readLong()}

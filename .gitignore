@@ -12,6 +12,7 @@ reports/
 
 # Package Files #
 *.jar
+!repo/**/*.jar
 *.war
 *.ear
 
