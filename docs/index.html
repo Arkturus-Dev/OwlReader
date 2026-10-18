@@ -3,8 +3,8 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>OwlReader - Modern Binary I/O & Buffering for Java 21</title>
-  <meta name="description" content="High-performance, zero-copy binary I/O, serialization, and buffering library for Java 21 with Panama MemorySegment, NIO, VarInt, and 24-bit integer support.">
+  <title>OwlReader - High-Performance Binary I/O & Buffering for Java 21</title>
+  <meta name="description" content="A unified, high-performance binary I/O, serialization, and buffering toolkit for Java 21 across In-Memory Arrays, Streams, NIO Buffers, and Native Memory Access.">
   <link rel="icon" type="image/jpeg" href="assets/logo.jpg">
   <meta property="og:image" content="assets/logo.jpg">
   <style>
@@ -84,7 +84,7 @@
       text-decoration: none;
     }
     .hero {
-      max-width: 1000px;
+      max-width: 900px;
       margin: 3.5rem auto 3rem;
       padding: 0 1.5rem;
       text-align: center;
@@ -100,7 +100,7 @@
       object-fit: cover;
     }
     .hero h1 {
-      font-size: 3rem;
+      font-size: 2.85rem;
       line-height: 1.2;
       margin-bottom: 1.25rem;
       background: linear-gradient(135deg, #ffffff 40%, var(--primary) 100%);
@@ -108,9 +108,9 @@
       -webkit-text-fill-color: transparent;
     }
     .hero p {
-      font-size: 1.25rem;
+      font-size: 1.2rem;
       color: var(--text-muted);
-      max-width: 750px;
+      max-width: 760px;
       margin: 0 auto 2rem;
     }
     .hero-actions {
@@ -145,50 +145,109 @@
       text-decoration: none;
     }
     .container {
-      max-width: 1100px;
+      max-width: 1050px;
       margin: 0 auto;
       padding: 0 1.5rem 5rem;
     }
     .section-title {
-      font-size: 1.75rem;
-      margin-bottom: 1.5rem;
+      font-size: 1.85rem;
+      margin-bottom: 0.5rem;
       text-align: center;
+    }
+    .section-subtitle {
+      color: var(--text-muted);
+      text-align: center;
+      margin-bottom: 2.5rem;
+      font-size: 1.05rem;
     }
     .features-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+      grid-template-columns: repeat(auto-fit, minmax(460px, 1fr));
       gap: 1.5rem;
-      margin-bottom: 4rem;
+      margin-bottom: 4.5rem;
+    }
+    @media (max-width: 600px) {
+      .features-grid { grid-template-columns: 1fr; }
     }
     .feature-card {
       background: var(--card-bg);
       border: 1px solid var(--card-border);
       border-radius: 8px;
-      padding: 1.5rem;
+      padding: 1.75rem;
       transition: border-color 0.2s, transform 0.2s;
     }
     .feature-card:hover {
       border-color: var(--primary);
       transform: translateY(-2px);
     }
-    .feature-icon {
-      font-size: 1.75rem;
+    .feature-header {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
       margin-bottom: 0.75rem;
     }
+    .feature-icon {
+      font-size: 1.6rem;
+    }
     .feature-card h3 {
-      font-size: 1.2rem;
-      margin-bottom: 0.5rem;
+      font-size: 1.25rem;
       color: var(--text);
     }
     .feature-card p {
       color: var(--text-muted);
       font-size: 0.95rem;
+      margin-bottom: 0.75rem;
+    }
+    .feature-card ul {
+      list-style-position: inside;
+      color: var(--text-muted);
+      font-size: 0.9rem;
+      margin-left: 0.25rem;
+    }
+    .feature-card li {
+      margin-bottom: 0.35rem;
+    }
+    .matrix-wrapper {
+      margin-bottom: 4.5rem;
+      overflow-x: auto;
+    }
+    .matrix-table {
+      width: 100%;
+      border-collapse: collapse;
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 8px;
+      overflow: hidden;
+    }
+    .matrix-table th, .matrix-table td {
+      padding: 1rem 1.25rem;
+      text-align: left;
+      border-bottom: 1px solid var(--border-color);
+      font-size: 0.95rem;
+    }
+    .matrix-table th {
+      background: #1c2128;
+      font-size: 0.85rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--text-muted);
+    }
+    .matrix-table tr:last-child td {
+      border-bottom: none;
+    }
+    code {
+      background: var(--code-bg);
+      padding: 0.2rem 0.45rem;
+      border-radius: 4px;
+      font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
+      font-size: 0.85rem;
+      color: #79c0ff;
     }
     .code-section {
       background: var(--card-bg);
       border: 1px solid var(--card-border);
       border-radius: 8px;
-      margin-bottom: 4rem;
+      margin-bottom: 2.5rem;
       overflow: hidden;
     }
     .code-header {
@@ -209,6 +268,11 @@
       line-height: 1.5;
       color: #e6edf3;
     }
+    pre code {
+      background: transparent;
+      padding: 0;
+      color: inherit;
+    }
     .install-box {
       background: var(--card-bg);
       border: 1px solid var(--card-border);
@@ -218,7 +282,7 @@
     }
     footer {
       border-top: 1px solid var(--border-color);
-      padding: 2rem;
+      padding: 2.5rem 1rem;
       text-align: center;
       color: var(--text-muted);
       font-size: 0.9rem;
@@ -243,8 +307,8 @@
   <main>
     <section class="hero">
       <img src="assets/logo.jpg" alt="OwlReader Logo" class="hero-logo">
-      <h1>Modern Binary I/O & Buffering</h1>
-      <p>A high-performance Java 21 library delivering zero-copy slicing, VarInt & ZigZag codecs, 24-bit medium integers, Panama MemorySegment, and unified stream framing.</p>
+      <h1>Unified Binary I/O & Buffering</h1>
+      <p>A high-performance Java 21 library for reading, writing, slicing, and framing binary data seamlessly across In-Memory Arrays, Streams, NIO Buffers, and Native Memory Access.</p>
       <div class="hero-actions">
         <a href="./apidocs/" class="btn btn-primary">Browse Javadoc API</a>
         <a href="https://github.com/Arkturus-Dev/OwlReader" target="_blank" rel="noopener" class="btn btn-secondary">View on GitHub</a>
@@ -252,86 +316,179 @@
     </section>
 
     <div class="container">
-      <h2 class="section-title">Core Features</h2>
+      <h2 class="section-title">Core Architectural Pillars</h2>
+      <p class="section-subtitle">A coherent, production-ready foundation designed for network protocols, file formats, and high-throughput serialization.</p>
+
       <div class="features-grid">
         <div class="feature-card">
-          <div class="feature-icon">⚡</div>
-          <h3>Zero-Copy Slicing</h3>
-          <p>Split, slice, and delegate binary streams with <code>reader.slice(length)</code> across byte arrays, memory segments, and direct buffers without allocations or byte copying.</p>
+          <div class="feature-header">
+            <span class="feature-icon">🔌</span>
+            <h3>Unified Binary I/O Engine</h3>
+          </div>
+          <p>A single polymorphic interface hierarchy (<code>Readable</code> / <code>OwlReader</code> and <code>OwlWriter</code>) that abstracts underlying storage targets.</p>
+          <ul>
+            <li>Write binary parsing and serialization logic once against common interfaces.</li>
+            <li>Switch seamlessly between heap arrays, network streams, and off-heap memory without rewriting protocol code.</li>
+            <li>Full position tracking, relative seeks, peeking, and skipping.</li>
+          </ul>
         </div>
 
         <div class="feature-card">
-          <div class="feature-icon">📦</div>
-          <h3>VarInt & ZigZag Codecs</h3>
-          <p>Standard Protocol Buffers LEB128 compatible variable-length integers and 64-bit longs. ZigZag encoding maps small negative numbers to a single byte.</p>
+          <div class="feature-header">
+            <span class="feature-icon">📐</span>
+            <h3>Comprehensive Protocol Encodings</h3>
+          </div>
+          <p>First-class support for binary standards, custom endianness, and variable-length compression.</p>
+          <ul>
+            <li><b>Endianness Control</b>: Seamless Big-Endian and Little-Endian switching on the fly.</li>
+            <li><b>Primitives</b>: Signed/unsigned 8, 16, 24, 32, and 64-bit integers, floats, and doubles.</li>
+            <li><b>Safe Unsigned Checks</b>: Explicit overflow verification (<code>readSU*</code>, <code>writeSU*</code>).</li>
+            <li><b>VarInt & ZigZag</b>: Protocol Buffers LEB128 compatible variable integers with 1-byte encoding for small negative values.</li>
+            <li><b>String Protocols</b>: Fixed-width, null-terminated C strings, 1/2/4-byte Pascal strings, and line-based formats.</li>
+          </ul>
         </div>
 
         <div class="feature-card">
-          <div class="feature-icon">🎯</div>
-          <h3>24-Bit Medium Integers</h3>
-          <p>Native 3-byte protocol header operations with signed <code>readInt24()</code>, unsigned <code>readUInt24()</code>, and <code>writeInt24()</code> across Big and Little Endian.</p>
+          <div class="feature-header">
+            <span class="feature-icon">✂️</span>
+            <h3>Zero-Copy Slicing, Framing & Integrity</h3>
+          </div>
+          <p>Advanced stream decomposition and packet framing with built-in checksum validation.</p>
+          <ul>
+            <li><b>Zero-Copy Slicing</b>: <code>reader.slice(length)</code> creates independent sub-readers without allocating or copying buffer contents.</li>
+            <li><b>Deterministic Framing</b>: <code>reader.frame(length)</code> isolates packet windows; closing a frame skips remaining bytes to ensure parent stream alignment.</li>
+            <li><b>Inline Checksums</b>: <code>CRCByteArrayOwlReader</code> computes rolling CRC32 values during reads without separate passes.</li>
+          </ul>
         </div>
 
         <div class="feature-card">
-          <div class="feature-icon">☕</div>
-          <h3>Java 21 Panama FFM</h3>
-          <p>First-class integration with Foreign Function & Memory via <code>MemorySegmentOwlReader</code> and <code>MemorySegmentOwlWriter</code> for off-heap performance.</p>
-        </div>
-
-        <div class="feature-card">
-          <div class="feature-icon">🛡️</div>
-          <h3>Unified Framing & CRC</h3>
-          <p>Enforce strict frame boundaries with <code>reader.frame(length)</code> and compute rolling CRC32 checksums on the fly with <code>CRCByteArrayOwlReader</code>.</p>
-        </div>
-
-        <div class="feature-card">
-          <div class="feature-icon">🔄</div>
-          <h3>Fluent In-Memory Buffers</h3>
-          <p>Rich, fluent <code>Buffer</code> abstraction providing unchecked exception semantics, auto-expansion, delimiter scanning, and NIO Channel read/write.</p>
+          <div class="feature-header">
+            <span class="feature-icon">🔄</span>
+            <h3>In-Memory Buffer (Reader & Writer APIs)</h3>
+          </div>
+          <p>A high-performance, dynamic buffer combining reader and writer APIs in a single structure.</p>
+          <ul>
+            <li>Simultaneously implements <code>ReadableBuffer</code> and <code>WritableBuffer</code> with fluent method chaining.</li>
+            <li>Ergonomic unchecked exception handling (throws <code>UncheckedIOException</code>).</li>
+            <li>Delimiter-based scanning via <code>readUntil(byte)</code> and <code>readThrough(byte)</code>.</li>
+            <li>Direct bridging with Java NIO Channels via <code>readFrom()</code> and <code>writeTo()</code>.</li>
+          </ul>
         </div>
       </div>
 
-      <h2 class="section-title">Quick Start Examples</h2>
+      <h2 class="section-title">Supported Storage Backends</h2>
+      <p class="section-subtitle">OwlReader and OwlWriter provide specialized implementations for every memory and I/O model.</p>
 
-      <div class="code-section">
-        <div class="code-header">
-          <span>Reading & Writing Medium Integers and VarInts</span>
-          <span>Java 21</span>
-        </div>
-        <pre><code>// In-memory buffer with fluent chaining
-Buffer buffer = new Buffer();
-buffer.writeInt24(0x123456)
-      .writeVarInt(300)
-      .writeSignedVarInt(-42)
-      .writeString("OwlReader");
-
-// Reading primitives back
-int header = buffer.readInt24();          // 0x123456
-int count  = buffer.readVarInt();         // 300
-int delta  = buffer.readSignedVarInt();   // -42 (compressed via ZigZag)
-String tag = buffer.readString(9);        // "OwlReader"</code></pre>
+      <div class="matrix-wrapper">
+        <table class="matrix-table">
+          <thead>
+            <tr>
+              <th>Storage Backend</th>
+              <th>Reader Implementation</th>
+              <th>Writer Implementation</th>
+              <th>Key Characteristics</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><b>In-Memory Arrays</b></td>
+              <td><code>ByteArrayOwlReader</code></td>
+              <td><code>ByteArrayOwlWriter</code></td>
+              <td>Direct, zero-copy heap array manipulation under single-lock synchronization.</td>
+            </tr>
+            <tr>
+              <td><b>I/O Streams</b></td>
+              <td><code>InputStreamOwlReader</code></td>
+              <td><code>OutputStreamOwlWriter</code></td>
+              <td>Streaming adapters over standard Java I/O streams with unified packet framing.</td>
+            </tr>
+            <tr>
+              <td><b>NIO Buffers</b></td>
+              <td><code>NIOReader</code></td>
+              <td><code>NIOWriter</code></td>
+              <td>High-throughput Heap and Direct off-heap <code>java.nio.ByteBuffer</code> integration.</td>
+            </tr>
+            <tr>
+              <td><b>Native Memory Access</b></td>
+              <td><code>MemorySegmentOwlReader</code></td>
+              <td><code>MemorySegmentOwlWriter</code></td>
+              <td>Direct off-heap memory operations leveraging Java 21 <code>MemorySegment</code>.</td>
+            </tr>
+            <tr>
+              <td><b>Dual In-Memory Buffer</b></td>
+              <td colspan="2" style="text-align: center;"><code>Buffer</code> (Implements both <code>ReadableBuffer</code> &amp; <code>WritableBuffer</code>)</td>
+              <td>Self-expanding dual reader/writer buffer with delimiter parsing and unchecked exceptions.</td>
+            </tr>
+          </tbody>
+        </table>
       </div>
 
+      <h2 class="section-title">Core Usage Patterns</h2>
+      <p class="section-subtitle">Explore how OwlReader simplifies binary serialization and packet parsing.</p>
+
       <div class="code-section">
         <div class="code-header">
-          <span>Panama Native MemorySegment Zero-Copy I/O</span>
-          <span>Java 21 FFM</span>
+          <span>Pattern 1: Polymorphic Binary Protocol Serialization</span>
+          <span>Endianness &amp; Mixed Types</span>
         </div>
-        <pre><code>try (Arena arena = Arena.ofConfined()) {
-    MemorySegment segment = arena.allocate(1024);
-    MemorySegmentOwlWriter writer = new MemorySegmentOwlWriter(segment, Endian.BIG);
-    writer.writeInt24(0xAABBCC);
-    writer.writeLong(123456789012345L);
-
-    MemorySegmentOwlReader reader = new MemorySegmentOwlReader(segment, Endian.BIG);
-    assertEquals(0xAABBCC, reader.readInt24());
-    assertEquals(123456789012345L, reader.readLong());
+        <pre><code>// Polymorphic writer works identically across arrays, streams, NIO, and native memory
+public void writePacket(OwlWriter writer) throws IOException {
+    writer.setEndian(Endian.BIG);
+    writer.writeInt24(0x4F574C);               // 3-byte magic header ("OWL")
+    writer.writePascalShort("Client-Session");  // 2-byte length-prefixed string
+    writer.writeVarInt(1048576);                // Protobuf-compatible VarInt
+    writer.writeSignedVarInt(-42);              // Compact ZigZag-encoded integer
+    writer.writeDouble(98.6);                   // 64-bit IEEE float
 }</code></pre>
       </div>
 
-      <h2 class="section-title">Maven Coordinates</h2>
+      <div class="code-section">
+        <div class="code-header">
+          <span>Pattern 2: Zero-Copy Slicing &amp; Framed Stream Demuxing</span>
+          <span>Zero Allocation &amp; Boundary Safety</span>
+        </div>
+        <pre><code>// Read packet length, then frame the stream to enforce strict boundary safety
+int packetLength = reader.readInt();
+
+try (OwlReader packet = reader.frame(packetLength)) {
+    // Zero-copy slice header without copying bytes
+    OwlReader headerSlice = packet.slice(8);
+    short messageType = headerSlice.readShort();
+    int sequenceNum   = headerSlice.readInt();
+
+    // Read payload safely; closing the frame skips any unread padding
+    byte[] payload = packet.read(packet.available());
+}
+// Parent reader is automatically aligned to the start of the next packet!</code></pre>
+      </div>
+
+      <div class="code-section">
+        <div class="code-header">
+          <span>Pattern 3: In-Memory Buffer Supporting Reader &amp; Writer APIs</span>
+          <span>Dynamic &amp; Unchecked Exceptions</span>
+        </div>
+        <pre><code>// Dual reader/writer buffer with fluent chaining and delimiter searching
+Buffer buf = new Buffer();
+
+// Write using fluent builder API (no checked IOException)
+buf.writeBytes24(0x123456)
+   .writeVarInt(500)
+   .write("Header: Value\r\nBody Content\r\n");
+
+// Read back from the same buffer structure
+int magic = buf.readInt24();
+int count = buf.readVarInt();
+
+// Delimiter scanning
+String line = buf.readUntil((byte) '\n'); // "Header: Value\r"</code></pre>
+      </div>
+
+      <h2 class="section-title">Getting Started</h2>
+      <p class="section-subtitle">Add OwlReader to your build tool configuration.</p>
+
       <div class="install-box">
-        <pre><code>&lt;dependency&gt;
+        <pre><code>&lt;!-- Maven Coordinates --&gt;
+&lt;dependency&gt;
     &lt;groupId&gt;dev.arkturus&lt;/groupId&gt;
     &lt;artifactId&gt;owlreader&lt;/artifactId&gt;
     &lt;version&gt;1.0.0&lt;/version&gt;
